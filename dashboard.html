@@ -1,22 +1,88 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel Financeiro</title>
+  <title>💸 Entradas e Saídas</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header><h1>📊 Painel de Controle</h1></header>
+  <header>
+    <h1>💸 Entradas e Saídas</h1>
+  </header>
   <main>
-    <ul>
-      <li><a href="lancamentos.html">💸 Entradas e Saídas</a></li>
-      <li><a href="cartoes.html">💳 Cartões de Crédito</a></li>
-      <li><a href="planejamento.html">📅 Planejamento Mensal</a></li>
-      <li><a href="investimentos.html">🏦 Investimentos</a></li>
-      <li><a href="extrato.html">📄 Extrato Geral</a></li>
-    </ul>
+    <form>
+      <label>Tipo:</label>
+      <select name="tipo">
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select><br/><br/>
+
+      <label>Valor:</label>
+      <input type="number" name="valor" required step="0.01" /><br/><br/>
+
+      <label>Descrição:</label>
+      <input type="text" name="descricao" required /><br/><br/>
+
+      <label>Data:</label>
+      <input type="date" name="data" required /><br/><br/>
+
+      <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Histórico</h2>
+    <div id="lista-transacoes"></div>
+
+    <br/>
+    <a href="dashboard.html">← Voltar ao Painel</a>
   </main>
+
+  <script>
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const tipo = form.tipo.value;
+      const valor = parseFloat(form.valor.value);
+      const descricao = form.descricao.value.trim();
+      const data = form.data.value;
+
+      const novaTransacao = { tipo, valor, descricao, data };
+
+      // Pega transações antigas ou cria array vazio
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      // Adiciona nova transação
+      transacoes.push(novaTransacao);
+
+      // Salva de volta no localStorage
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+
+      // Limpa o formulário
+      form.reset();
+
+      // Atualiza a lista na tela
+      mostrarTransacoes();
+    });
+
+    function mostrarTransacoes() {
+      const container = document.getElementById('lista-transacoes');
+      container.innerHTML = ''; // limpa antes de desenhar de novo
+
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      transacoes.forEach((t) => {
+        const cor = t.tipo === 'entrada' ? 'green' : 'red';
+        const item = document.createElement('p');
+        item.style.color = cor;
+        item.textContent = `${t.data} - ${t.descricao}: R$ ${t.valor.toFixed(2)}`;
+        container.appendChild(item);
+      });
+    }
+
+    // Chama ao carregar a página
+    document.addEventListener('DOMContentLoaded', mostrarTransacoes);
+  </script>
 </body>
 </html>
