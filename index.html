@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle Financeiro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Controle Financeiro Pessoal</h1>
+  </header>
+
+  <main>
+    <section id="login-section">
+      <h2>Login</h2>
+      <form id="login-form">
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required />
+
+        <button type="submit">Entrar</button>
+      </form>
+
+      <div style="margin-top: 10px;">
+        <button onclick="location.href='register.html'">Cadastrar</button>
+        <button onclick="location.href='reset.html'">Esqueci a senha</button>
+      </div>
+    </section>
+
+    <section id="dashboard" style="display:none;">
+      <h2>Bem-vindo!</h2>
+      <p>Aqui vai o controle das suas entradas, saídas, cartões, investimentos e planejamento.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
