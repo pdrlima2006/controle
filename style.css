@@ -1,3 +1,4 @@
+/* Estilo base - Desktop e geral */
 body {
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
@@ -10,6 +11,7 @@ header {
   color: white;
   padding: 15px 20px;
   text-align: center;
+  font-size: 24px;
 }
 
 h1, h2 {
@@ -18,7 +20,7 @@ h1, h2 {
 
 form {
   max-width: 300px;
-  margin: auto;
+  margin: 30px auto;
   background-color: white;
   padding: 15px;
   border-radius: 8px;
@@ -29,6 +31,7 @@ label {
   display: block;
   margin-bottom: 5px;
   margin-top: 15px;
+  font-weight: 600;
 }
 
 input[type="text"],
@@ -36,6 +39,9 @@ input[type="password"] {
   width: 100%;
   padding: 8px;
   box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 button {
@@ -48,8 +54,45 @@ button {
   font-size: 16px;
   cursor: pointer;
   border-radius: 5px;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #0055aa;
+}
+
+/* ----------------------------------- */
+/* RESPONSIVIDADE - para telas menores */
+/* ----------------------------------- */
+
+@media (max-width: 600px) {
+  body {
+    padding: 0 10px;
+  }
+
+  header {
+    padding: 10px 10px;
+    font-size: 20px;
+  }
+
+  form {
+    max-width: 100%;
+    margin: 20px auto;
+    padding: 10px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    font-size: 14px;
+    padding: 6px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 8px;
+  }
 }
