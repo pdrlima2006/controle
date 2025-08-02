@@ -25,10 +25,13 @@
     <form id="planejamentoForm">
       <label>Mês:</label>
       <input type="month" name="mes" required />
+
       <label>Previsão de Receitas:</label>
-      <input type="number" name="receitas" required />
+      <input type="text" name="receitas" id="receitas" required />
+
       <label>Previsão de Despesas:</label>
-      <input type="number" name="despesas" required />
+      <input type="text" name="despesas" id="despesas" required />
+
       <button type="submit">Salvar</button>
     </form>
 
@@ -41,6 +44,23 @@
   </main>
 
   <script>
+    // Formatar entrada como moeda brasileira (R$)
+    function formatarMoeda(input) {
+      let valor = input.value.replace(/\D/g, "");
+      valor = (parseInt(valor) / 100).toFixed(2);
+      input.value = valor.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    }
+
+    const receitasInput = document.getElementById('receitas');
+    const despesasInput = document.getElementById('despesas');
+
+    [receitasInput, despesasInput].forEach(input => {
+      input.addEventListener("input", () => formatarMoeda(input));
+    });
+
     const form = document.getElementById('planejamentoForm');
     const graficoContainer = document.getElementById('graficoContainer');
     const tituloMes = document.getElementById('tituloMes');
@@ -51,22 +71,28 @@
       e.preventDefault();
 
       const mesInput = form.elements['mes'].value;
-      const receitas = parseFloat(form.elements['receitas'].value);
-      const despesas = parseFloat(form.elements['despesas'].value);
+      const receitasStr = receitasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
+      const despesasStr = despesasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
 
-      if (!mesInput) return;
+      const receitas = parseFloat(receitasStr);
+      const despesas = parseFloat(despesasStr);
+
+      if (!mesInput || isNaN(receitas) || isNaN(despesas)) return;
 
       const [ano, mes] = mesInput.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
 
       tituloMes.textContent = `Planejamento de ${nomeMes} de ${ano}`;
 
-      if (grafico) grafico.destroy(); // Remove gráfico anterior se existir
+      if (grafico) grafico.destroy();
 
       grafico = new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: ['Previsão de Receitas', 'Previsão de Despesas'],
+          labels: [
+            `Receitas: R$ ${receitas.toFixed(2).replace('.', ',')}`,
+            `Despesas: R$ ${despesas.toFixed(2).replace('.', ',')}`
+          ],
           datasets: [{
             data: [receitas, despesas],
             backgroundColor: ['#4CAF50', '#F44336']
