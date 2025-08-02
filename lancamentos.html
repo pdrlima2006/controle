@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💸 Entradas e Saídas</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
@@ -55,6 +56,12 @@
     li {
       margin-bottom: 10px;
     }
+    canvas {
+      margin-top: 30px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
@@ -89,17 +96,23 @@
       <h2>📅 Filtrar por Mês</h2>
       <label for="filtroMes">Selecione o mês:</label>
       <input type="month" id="filtroMes" />
+      <button onclick="filtrarPorMes()">Atualizar Gráfico</button>
       <button onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
     </div>
 
     <h2>📋 Histórico</h2>
     <ul id="listaTransacoes"></ul>
+
+    <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
+    <canvas id="graficoEntradasSaidas" width="400" height="400"></canvas>
   </main>
 
   <script>
     const form = document.getElementById('transacaoForm');
     const lista = document.getElementById('listaTransacoes');
     const inputFiltroMes = document.getElementById('filtroMes');
+    const canvas = document.getElementById('graficoEntradasSaidas');
+    let grafico;
 
     function formatarValor(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -107,7 +120,7 @@
 
     function atualizarLista(transacoes) {
       lista.innerHTML = '';
-      transacoes.forEach((t, index) => {
+      transacoes.forEach((t) => {
         const li = document.createElement('li');
         li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
         if (t.notaFiscalNome) {
@@ -122,42 +135,57 @@
       });
     }
 
+    function atualizarGrafico(transacoes) {
+      const entradas = transacoes.filter(t => t.tipo === 'entrada')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saidas = transacoes.filter(t => t.tipo === 'saida')
+        .reduce((total, t) => total + Number(t.valor), 0);
+
+      const ctx = canvas.getContext('2d');
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [entradas, saidas],
+            backgroundColor: ['#4CAF50', '#F44336'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
     function carregarDados() {
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
       atualizarLista(transacoes);
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const tipo = form.tipo.value;
-      const valor = parseFloat(form.valor.value);
-      const descricao = form.descricao.value;
-      const data = form.data.value;
-
-      const nova = { tipo, valor, descricao, data };
-
-      const arquivo = form.notaFiscal.files[0];
-      if (arquivo) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          nova.notaFiscalBase64 = reader.result;
-          nova.notaFiscalNome = arquivo.name;
-
-          salvarTransacao(nova);
-        };
-        reader.readAsDataURL(arquivo);
-      } else {
-        salvarTransacao(nova);
+    function filtrarPorMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert('Selecione um mês válido!');
+        return;
       }
-    });
 
-    function salvarTransacao(nova) {
+      const [ano, mes] = mesSelecionado.split("-");
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      transacoes.push(nova);
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      form.reset();
-      carregarDados();
+
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      atualizarGrafico(filtradas);
+      atualizarLista(filtradas);
     }
 
     async function gerarPdfDoMes() {
@@ -184,7 +212,7 @@
       const doc = new jsPDF();
 
       doc.setFontSize(16);
-      doc.text(`Relatório de Entradas e Saídas - ${mes}/${ano}`, 10, 20);
+      doc.text(`Relatório Financeiro - ${mes}/${ano}`, 10, 20);
       doc.setFontSize(12);
 
       let y = 30;
@@ -192,13 +220,52 @@
         const texto = `${t.data} - ${t.tipo.toUpperCase()} - ${formatarValor(Number(t.valor))} - ${t.descricao}`;
         doc.text(texto, 10, y);
         y += 10;
-        if (y > 270 && i !== filtradas.length - 1) {
+        if (y > 260) {
           doc.addPage();
           y = 20;
         }
       });
 
+      // Espera o gráfico ser convertido em imagem
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      if (y > 200) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.addImage(imgData, 'PNG', 30, y + 10, 150, 150);
+
       doc.save(`relatorio_${ano}-${mes}.pdf`);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const tipo = form.tipo.value;
+      const valor = parseFloat(form.valor.value);
+      const descricao = form.descricao.value;
+      const data = form.data.value;
+      const nova = { tipo, valor, descricao, data };
+
+      const arquivo = form.notaFiscal.files[0];
+      if (arquivo) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          nova.notaFiscalBase64 = reader.result;
+          nova.notaFiscalNome = arquivo.name;
+          salvarTransacao(nova);
+        };
+        reader.readAsDataURL(arquivo);
+      } else {
+        salvarTransacao(nova);
+      }
+    });
+
+    function salvarTransacao(nova) {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(nova);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      form.reset();
+      carregarDados();
     }
 
     document.addEventListener('DOMContentLoaded', carregarDados);
