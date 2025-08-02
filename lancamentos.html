@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💸 Entradas e Saídas</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,7 +19,7 @@
       border-radius: 8px;
       text-align: center;
     }
-    form {
+    form, .filtros {
       background: white;
       padding: 20px;
       margin-top: 20px;
@@ -45,12 +45,6 @@
       color: #003366;
       text-decoration: none;
     }
-    canvas {
-      margin-top: 30px;
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-    }
     ul {
       margin-top: 20px;
       background: #fff;
@@ -60,18 +54,12 @@
     }
     li {
       margin-bottom: 10px;
-      cursor: pointer;
-    }
-    .charts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
     }
   </style>
 </head>
 <body>
   <header><h1>💸 Entradas e Saídas</h1></header>
+
   <main>
     <form id="transacaoForm">
       <label>Tipo:</label>
@@ -89,136 +77,129 @@
       <label>Data:</label>
       <input type="date" name="data" required />
 
+      <label>Anexar Nota Fiscal (opcional):</label>
+      <input type="file" name="notaFiscal" accept=".pdf,.jpg,.jpeg,.png" />
+
       <button type="submit">Salvar</button>
     </form>
 
     <a href="dashboard.html">← Voltar ao Painel</a>
 
+    <div class="filtros">
+      <h2>📅 Filtrar por Mês</h2>
+      <label for="filtroMes">Selecione o mês:</label>
+      <input type="month" id="filtroMes" />
+      <button onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
+    </div>
+
     <h2>📋 Histórico</h2>
     <ul id="listaTransacoes"></ul>
-
-    <div class="charts">
-      <div>
-        <h2>📊 Gráfico da Transação Selecionada</h2>
-        <canvas id="graficoIndividual" width="300" height="300"></canvas>
-      </div>
-      <div>
-        <h2>📊 Gráfico Total do Mês</h2>
-        <button onclick="gerarGraficoMes()">Gerar gráfico do mês</button>
-        <canvas id="graficoMensal" width="300" height="300"></canvas>
-      </div>
-    </div>
   </main>
 
   <script>
     const form = document.getElementById('transacaoForm');
     const lista = document.getElementById('listaTransacoes');
-    const ctxIndividual = document.getElementById('graficoIndividual').getContext('2d');
-    const ctxMensal = document.getElementById('graficoMensal').getContext('2d');
-    let graficoIndividual;
-    let graficoMensal;
-    let transacoes = [];
+    const inputFiltroMes = document.getElementById('filtroMes');
 
-    function carregarDados() {
-      transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      atualizarLista();
+    function formatarValor(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    function atualizarLista() {
+    function atualizarLista(transacoes) {
       lista.innerHTML = '';
       transacoes.forEach((t, index) => {
         const li = document.createElement('li');
-        li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de R$${Number(t.valor).toFixed(2)} (${t.descricao})`;
-        li.addEventListener('click', () => mostrarGraficoIndividual(t));
-        li.dataset.index = index;
+        li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
+        if (t.notaFiscalNome) {
+          const link = document.createElement('a');
+          link.href = t.notaFiscalBase64;
+          link.download = t.notaFiscalNome;
+          link.textContent = ' 📎 Ver Nota Fiscal';
+          link.style.marginLeft = '10px';
+          li.appendChild(link);
+        }
         lista.appendChild(li);
       });
     }
 
-    function mostrarGraficoIndividual(transacao) {
-      if (graficoIndividual) graficoIndividual.destroy();
-
-      const entrada = transacao.tipo === 'entrada' ? transacao.valor : 0;
-      const saida = transacao.tipo === 'saida' ? transacao.valor : 0;
-
-      graficoIndividual = new Chart(ctxIndividual, {
-        type: 'pie',
-        data: {
-          labels: ['Entrada', 'Saída'],
-          datasets: [{
-            data: [entrada, saida],
-            backgroundColor: ['#4CAF50', '#F44336'],
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-
-      // Salva transação clicada para o gráfico do mês
-      localStorage.setItem('transacaoSelecionada', JSON.stringify(transacao));
+    function carregarDados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      atualizarLista(transacoes);
     }
 
-    function gerarGraficoMes() {
-      const transacao = JSON.parse(localStorage.getItem('transacaoSelecionada'));
-      if (!transacao) {
-        alert("Clique primeiro em uma transação para gerar o gráfico do mês.");
-        return;
-      }
-
-      const dataSelecionada = new Date(transacao.data);
-      const mes = dataSelecionada.getMonth();
-      const ano = dataSelecionada.getFullYear();
-
-      const doMes = transacoes.filter(t => {
-        const data = new Date(t.data);
-        return data.getMonth() === mes && data.getFullYear() === ano;
-      });
-
-      const totalEntradas = doMes.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
-      const totalSaidas = doMes.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
-
-      if (graficoMensal) graficoMensal.destroy();
-
-      graficoMensal = new Chart(ctxMensal, {
-        type: 'pie',
-        data: {
-          labels: [`Entradas em ${mes+1}/${ano}`, `Saídas em ${mes+1}/${ano}`],
-          datasets: [{
-            data: [totalEntradas, totalSaidas],
-            backgroundColor: ['#2196F3', '#FF9800']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const tipo = form.tipo.value;
       const valor = parseFloat(form.valor.value);
       const descricao = form.descricao.value;
       const data = form.data.value;
 
       const nova = { tipo, valor, descricao, data };
+
+      const arquivo = form.notaFiscal.files[0];
+      if (arquivo) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          nova.notaFiscalBase64 = reader.result;
+          nova.notaFiscalNome = arquivo.name;
+
+          salvarTransacao(nova);
+        };
+        reader.readAsDataURL(arquivo);
+      } else {
+        salvarTransacao(nova);
+      }
+    });
+
+    function salvarTransacao(nova) {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
       transacoes.push(nova);
       localStorage.setItem('transacoes', JSON.stringify(transacoes));
-
       form.reset();
       carregarDados();
-    });
+    }
+
+    async function gerarPdfDoMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert('Selecione um mês válido!');
+        return;
+      }
+
+      const [ano, mes] = mesSelecionado.split("-");
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      if (filtradas.length === 0) {
+        alert("Nenhuma transação encontrada para este mês.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text(`Relatório de Entradas e Saídas - ${mes}/${ano}`, 10, 20);
+      doc.setFontSize(12);
+
+      let y = 30;
+      filtradas.forEach((t, i) => {
+        const texto = `${t.data} - ${t.tipo.toUpperCase()} - ${formatarValor(Number(t.valor))} - ${t.descricao}`;
+        doc.text(texto, 10, y);
+        y += 10;
+        if (y > 270 && i !== filtradas.length - 1) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+
+      doc.save(`relatorio_${ano}-${mes}.pdf`);
+    }
 
     document.addEventListener('DOMContentLoaded', carregarDados);
   </script>
