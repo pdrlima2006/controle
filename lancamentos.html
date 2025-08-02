@@ -211,28 +211,22 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      doc.setFontSize(16);
-      doc.text(`Relatório Financeiro - ${mes}/${ano}`, 10, 20);
+      doc.setFontSize(18);
+      doc.text(`💸 Relatório Financeiro - ${mes}/${ano}`, 105, 20, null, null, 'center');
       doc.setFontSize(12);
+      doc.setLineWidth(0.5);
+      doc.line(10, 25, 200, 25);
 
-      let y = 30;
+      let y = 35;
       filtradas.forEach((t, i) => {
-        const texto = `${t.data} - ${t.tipo.toUpperCase()} - ${formatarValor(Number(t.valor))} - ${t.descricao}`;
-        doc.text(texto, 10, y);
+        const texto = `${t.data} | ${t.tipo.toUpperCase()} | ${formatarValor(Number(t.valor))} | ${t.descricao}`;
+        doc.text(texto, 14, y);
         y += 10;
-        if (y > 260) {
+        if (y > 280) {
           doc.addPage();
           y = 20;
         }
       });
-
-      // Espera o gráfico ser convertido em imagem
-      const imgData = canvas.toDataURL("image/png", 1.0);
-      if (y > 200) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.addImage(imgData, 'PNG', 30, y + 10, 150, 150);
 
       doc.save(`relatorio_${ano}-${mes}.pdf`);
     }
