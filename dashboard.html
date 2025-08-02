@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>📊 Painel de Controle</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -29,18 +28,19 @@
       text-decoration: none;
       font-weight: bold;
     }
-    canvas {
-      margin: 30px 0;
+    .mensagem {
+      margin-top: 50px;
       background: white;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 30px;
+      border-radius: 10px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      display: block;
-      max-width: 600px;
-      width: 100%;
+      text-align: center;
+      font-size: 1.3rem;
     }
-    h2 {
-      margin-top: 40px;
+    .mensagem span {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -57,72 +57,9 @@
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-
-      let totalEntradas = 0, totalSaidas = 0;
-      transacoes.forEach((t) => {
-        if (t.tipo === 'entrada') totalEntradas += t.valor;
-        else totalSaidas += t.valor;
-      });
-
-      // 💸 Entradas vs Saídas
-      new Chart(document.getElementById('grafico-transacoes'), {
-        type: 'pie',
-        data: {
-          labels: ['Entradas', 'Saídas'],
-          datasets: [{
-            data: [totalEntradas, totalSaidas],
-            backgroundColor: ['#4bc0c0', '#ff6384']
-          }]
-        }
-      });
-
-      // 📅 Planejamento Mensal (simulado)
-      const planejado = 3000;
-      const realizado = totalEntradas - totalSaidas;
-      new Chart(document.getElementById('grafico-planejamento'), {
-        type: 'pie',
-        data: {
-          labels: ['Planejado', 'Realizado'],
-          datasets: [{
-            data: [planejado, realizado],
-            backgroundColor: ['#36a2eb', '#ffcd56']
-          }]
-        }
-      });
-
-      // 📄 Extrato Geral
-      const saldo = totalEntradas - totalSaidas;
-      new Chart(document.getElementById('grafico-extrato'), {
-        type: 'pie',
-        data: {
-          labels: ['Saldo Positivo', 'Saldo Negativo'],
-          datasets: [{
-            data: [saldo >= 0 ? saldo : 0, saldo < 0 ? Math.abs(saldo) : 0],
-            backgroundColor: ['#66bb6a', '#ef5350']
-          }]
-        }
-      });
-
-      // 🏦 Investimentos (simulados)
-      const investimentos = {
-        'Renda Fixa': 2500,
-        'Ações': 1200,
-        'Cripto': 800
-      };
-      new Chart(document.getElementById('grafico-investimentos'), {
-        type: 'pie',
-        data: {
-          labels: Object.keys(investimentos),
-          datasets: [{
-            data: Object.values(investimentos),
-            backgroundColor: ['#9575cd', '#4dd0e1', '#ffb74d']
-          }]
-        }
-      });
-    });
-  </script>
+  <div class="mensagem">
+    <span>👨‍💼</span>
+    Aqui você faz seu <strong>controle financeiro</strong> de forma simples e prática!
+  </div>
 </body>
 </html>
