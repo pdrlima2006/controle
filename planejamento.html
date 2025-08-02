@@ -17,6 +17,16 @@
       font-size: 1.2rem;
       font-weight: bold;
     }
+    #botaoMostrarGrafico {
+      display: none;
+      margin-top: 20px;
+      padding: 10px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -37,6 +47,10 @@
 
     <a href="dashboard.html">← Voltar ao Painel</a>
 
+    <!-- Botão para mostrar o gráfico -->
+    <button id="botaoMostrarGrafico" onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
+
+    <!-- Container do gráfico -->
     <div id="graficoContainer">
       <div id="tituloMes"></div>
       <canvas id="graficoPizza"></canvas>
@@ -50,9 +64,9 @@
     const graficoContainer = document.getElementById('graficoContainer');
     const tituloMes = document.getElementById('tituloMes');
     const ctx = document.getElementById('graficoPizza').getContext('2d');
+    const botaoMostrarGrafico = document.getElementById('botaoMostrarGrafico');
     let grafico;
 
-    // Formatar entrada como moeda brasileira (R$)
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
       valor = (parseInt(valor) / 100).toFixed(2);
@@ -66,7 +80,6 @@
       input.addEventListener("input", () => formatarMoeda(input));
     });
 
-    // Exibir gráfico
     function exibirGrafico(mesInput, receitas, despesas) {
       const [ano, mes] = mesInput.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
@@ -100,7 +113,13 @@
       graficoContainer.style.display = 'block';
     }
 
-    // Salvar no localStorage
+    function mostrarGrafico() {
+      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
+      if (salvo) {
+        exibirGrafico(salvo.mes, salvo.receitas, salvo.despesas);
+      }
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -120,10 +139,12 @@
       };
 
       localStorage.setItem('planejamentoMensal', JSON.stringify(dados));
-      exibirGrafico(mesInput, receitas, despesas);
+
+      // Mostra botão para ver o gráfico
+      botaoMostrarGrafico.style.display = 'block';
+      graficoContainer.style.display = 'none'; // esconde o gráfico até o botão ser clicado
     });
 
-    // Carregar do localStorage ao abrir a página
     document.addEventListener('DOMContentLoaded', () => {
       const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
       if (salvo) {
@@ -137,7 +158,8 @@
           currency: "BRL",
         });
 
-        exibirGrafico(salvo.mes, salvo.receitas, salvo.despesas);
+        // Exibe botão para ver gráfico
+        botaoMostrarGrafico.style.display = 'block';
       }
     });
   </script>
