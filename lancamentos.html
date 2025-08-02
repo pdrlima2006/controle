@@ -60,6 +60,13 @@
     }
     li {
       margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .charts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
     }
   </style>
 </head>
@@ -90,40 +97,101 @@
     <h2>📋 Histórico</h2>
     <ul id="listaTransacoes"></ul>
 
-    <h2>📊 Gráfico de Entradas e Saídas</h2>
-    <canvas id="graficoEntradasSaidas" width="400" height="400"></canvas>
+    <div class="charts">
+      <div>
+        <h2>📊 Gráfico da Transação Selecionada</h2>
+        <canvas id="graficoIndividual" width="300" height="300"></canvas>
+      </div>
+      <div>
+        <h2>📊 Gráfico Total do Mês</h2>
+        <button onclick="gerarGraficoMes()">Gerar gráfico do mês</button>
+        <canvas id="graficoMensal" width="300" height="300"></canvas>
+      </div>
+    </div>
   </main>
 
   <script>
     const form = document.getElementById('transacaoForm');
     const lista = document.getElementById('listaTransacoes');
-    let grafico;
+    const ctxIndividual = document.getElementById('graficoIndividual').getContext('2d');
+    const ctxMensal = document.getElementById('graficoMensal').getContext('2d');
+    let graficoIndividual;
+    let graficoMensal;
+    let transacoes = [];
 
-    function atualizarLista(transacoes) {
+    function carregarDados() {
+      transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      atualizarLista();
+    }
+
+    function atualizarLista() {
       lista.innerHTML = '';
       transacoes.forEach((t, index) => {
         const li = document.createElement('li');
         li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de R$${Number(t.valor).toFixed(2)} (${t.descricao})`;
+        li.addEventListener('click', () => mostrarGraficoIndividual(t));
+        li.dataset.index = index;
         lista.appendChild(li);
       });
     }
 
-    function atualizarGrafico(transacoes) {
-      const entradas = transacoes.filter(t => t.tipo === 'entrada')
-        .reduce((total, t) => total + Number(t.valor), 0);
-      const saidas = transacoes.filter(t => t.tipo === 'saida')
-        .reduce((total, t) => total + Number(t.valor), 0);
+    function mostrarGraficoIndividual(transacao) {
+      if (graficoIndividual) graficoIndividual.destroy();
 
-      const ctx = document.getElementById('graficoEntradasSaidas').getContext('2d');
-      if (grafico) grafico.destroy();
+      const entrada = transacao.tipo === 'entrada' ? transacao.valor : 0;
+      const saida = transacao.tipo === 'saida' ? transacao.valor : 0;
 
-      grafico = new Chart(ctx, {
+      graficoIndividual = new Chart(ctxIndividual, {
         type: 'pie',
         data: {
-          labels: ['Entradas', 'Saídas'],
+          labels: ['Entrada', 'Saída'],
           datasets: [{
-            data: [entradas, saidas],
+            data: [entrada, saida],
             backgroundColor: ['#4CAF50', '#F44336'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+
+      // Salva transação clicada para o gráfico do mês
+      localStorage.setItem('transacaoSelecionada', JSON.stringify(transacao));
+    }
+
+    function gerarGraficoMes() {
+      const transacao = JSON.parse(localStorage.getItem('transacaoSelecionada'));
+      if (!transacao) {
+        alert("Clique primeiro em uma transação para gerar o gráfico do mês.");
+        return;
+      }
+
+      const dataSelecionada = new Date(transacao.data);
+      const mes = dataSelecionada.getMonth();
+      const ano = dataSelecionada.getFullYear();
+
+      const doMes = transacoes.filter(t => {
+        const data = new Date(t.data);
+        return data.getMonth() === mes && data.getFullYear() === ano;
+      });
+
+      const totalEntradas = doMes.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
+      const totalSaidas = doMes.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
+
+      if (graficoMensal) graficoMensal.destroy();
+
+      graficoMensal = new Chart(ctxMensal, {
+        type: 'pie',
+        data: {
+          labels: [`Entradas em ${mes+1}/${ano}`, `Saídas em ${mes+1}/${ano}`],
+          datasets: [{
+            data: [totalEntradas, totalSaidas],
+            backgroundColor: ['#2196F3', '#FF9800']
           }]
         },
         options: {
@@ -137,23 +205,14 @@
       });
     }
 
-    function carregarDados() {
-      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      atualizarLista(transacoes);
-      atualizarGrafico(transacoes);
-    }
-
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-
       const tipo = form.tipo.value;
       const valor = parseFloat(form.valor.value);
       const descricao = form.descricao.value;
       const data = form.data.value;
 
       const nova = { tipo, valor, descricao, data };
-
-      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
       transacoes.push(nova);
       localStorage.setItem('transacoes', JSON.stringify(transacoes));
 
