@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,22 +5,159 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💳 Cartões de Crédito</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    header {
+      background-color: #4a148c;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    label, input {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      background: #4a148c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #4a148c;
+      text-decoration: none;
+    }
+    .cartao {
+      width: 300px;
+      height: 180px;
+      background: linear-gradient(135deg, #673ab7, #512da8);
+      color: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      position: relative;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .cartao .bandeira {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      width: 60px;
+    }
+    .cartao .numero {
+      margin-top: 40px;
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    .cartao .nome {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .cartao .info {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
   <header><h1>💳 Cartões de Crédito</h1></header>
   <main>
-    <form>
-      
-<label>Nome do Cartão:</label>
-<input type="text" name="nome" required />
-<label>Limite:</label>
-<input type="number" name="limite" required />
-<label>Fatura Atual:</label>
-<input type="number" name="fatura" required />
+    <form id="cartaoForm">
+      <label>Nome do Cartão:</label>
+      <input type="text" name="nome" required />
+
+      <label>Limite:</label>
+      <input type="number" name="limite" required />
+
+      <label>Fatura Atual:</label>
+      <input type="number" name="fatura" required />
 
       <button type="submit">Salvar</button>
     </form>
+
     <a href="dashboard.html">← Voltar ao Painel</a>
+
+    <h2>📋 Cartões Salvos</h2>
+    <div id="listaCartoes"></div>
   </main>
+
+  <script>
+    const form = document.getElementById('cartaoForm');
+    const lista = document.getElementById('listaCartoes');
+
+    function gerarNumeroCartao() {
+      const ultimos4 = Math.floor(1000 + Math.random() * 8999);
+      return '**** **** **** ' + ultimos4;
+    }
+
+    function detectarBandeira(nome) {
+      nome = nome.toLowerCase();
+      if (nome.includes('visa')) return 'https://img.icons8.com/color/48/000000/visa.png';
+      if (nome.includes('master')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
+      if (nome.includes('elo')) return 'https://logodownload.org/wp-content/uploads/2017/04/elo-logo-4.png';
+      return 'https://img.icons8.com/ios-filled/50/ffffff/bank-card-back-side.png';
+    }
+
+    function carregarCartoes() {
+      const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
+      lista.innerHTML = '';
+
+      cartoes.forEach((c) => {
+        const usado = parseFloat(c.fatura);
+        const limite = parseFloat(c.limite);
+        const disponivel = (limite - usado).toFixed(2);
+        const numero = gerarNumeroCartao();
+        const bandeira = detectarBandeira(c.nome);
+
+        const div = document.createElement('div');
+        div.className = 'cartao';
+        div.innerHTML = `
+          <img class="bandeira" src="${bandeira}" alt="bandeira" />
+          <div class="numero">${numero}</div>
+          <div class="nome">💳 ${c.nome}</div>
+          <div class="info">💰 Limite: R$ ${limite.toFixed(2)}</div>
+          <div class="info">📄 Fatura: R$ ${usado.toFixed(2)}</div>
+          <div class="info">✅ Disponível: R$ ${disponivel}</div>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nome = form.nome.value;
+      const limite = parseFloat(form.limite.value);
+      const fatura = parseFloat(form.fatura.value);
+
+      const novoCartao = { nome, limite, fatura };
+
+      const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
+      cartoes.push(novoCartao);
+      localStorage.setItem('cartoes', JSON.stringify(cartoes));
+
+      form.reset();
+      carregarCartoes();
+    });
+
+    document.addEventListener('DOMContentLoaded', carregarCartoes);
+  </script>
 </body>
 </html>
