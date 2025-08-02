@@ -96,8 +96,8 @@
       <h2>📅 Filtrar por Mês</h2>
       <label for="filtroMes">Selecione o mês:</label>
       <input type="month" id="filtroMes" />
-      <button onclick="filtrarPorMes()">Atualizar Gráfico</button>
-      <button onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
+      <button type="button" onclick="filtrarPorMes()">Atualizar Gráfico</button>
+      <button type="button" onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
     </div>
 
     <h2>📋 Histórico</h2>
@@ -211,21 +211,46 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      doc.setFontSize(18);
+      // Cabeçalho
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
       doc.text(`💸 Relatório Financeiro - ${mes}/${ano}`, 105, 20, null, null, 'center');
-      doc.setFontSize(12);
+
+      // Linha abaixo do título
       doc.setLineWidth(0.5);
       doc.line(10, 25, 200, 25);
 
+      // Configurações da fonte do conteúdo
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(12);
+
+      // Cabeçalho da tabela com colunas fixas (monospace para alinhar)
+      const colDataX = 14;
+      const colTipoX = 45;
+      const colValorX = 95;
+      const colDescX = 130;
       let y = 35;
-      filtradas.forEach((t, i) => {
-        const texto = `${t.data} | ${t.tipo.toUpperCase()} | ${formatarValor(Number(t.valor))} | ${t.descricao}`;
-        doc.text(texto, 14, y);
-        y += 10;
+
+      doc.text('Data', colDataX, y);
+      doc.text('Tipo', colTipoX, y);
+      doc.text('Valor', colValorX, y);
+      doc.text('Descrição', colDescX, y);
+      y += 8;
+      doc.line(10, y - 4, 200, y - 4);
+
+      // Conteúdo
+      filtradas.forEach(t => {
         if (y > 280) {
           doc.addPage();
           y = 20;
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(12);
         }
+        doc.text(t.data, colDataX, y);
+        doc.text(t.tipo.toUpperCase(), colTipoX, y);
+        doc.text(formatarValor(Number(t.valor)), colValorX, y);
+        doc.text(t.descricao, colDescX, y);
+        y += 8;
       });
 
       doc.save(`relatorio_${ano}-${mes}.pdf`);
