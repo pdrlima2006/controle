@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,27 +5,163 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💸 Entradas e Saídas</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    label, select, input {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #003366;
+      text-decoration: none;
+    }
+    canvas {
+      margin-top: 30px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    ul {
+      margin-top: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    li {
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
   <header><h1>💸 Entradas e Saídas</h1></header>
   <main>
-    <form>
-      
-<label>Tipo:</label>
-<select name="tipo">
-  <option value="entrada">Entrada</option>
-  <option value="saida">Saída</option>
-</select>
-<label>Valor:</label>
-<input type="number" name="valor" required />
-<label>Descrição:</label>
-<input type="text" name="descricao" required />
-<label>Data:</label>
-<input type="date" name="data" required />
+    <form id="transacaoForm">
+      <label>Tipo:</label>
+      <select name="tipo" required>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
+
+      <label>Valor:</label>
+      <input type="number" name="valor" step="0.01" required />
+
+      <label>Descrição:</label>
+      <input type="text" name="descricao" required />
+
+      <label>Data:</label>
+      <input type="date" name="data" required />
 
       <button type="submit">Salvar</button>
     </form>
+
     <a href="dashboard.html">← Voltar ao Painel</a>
+
+    <h2>📋 Histórico</h2>
+    <ul id="listaTransacoes"></ul>
+
+    <h2>📊 Gráfico de Entradas e Saídas</h2>
+    <canvas id="graficoEntradasSaidas" width="400" height="400"></canvas>
   </main>
+
+  <script>
+    const form = document.getElementById('transacaoForm');
+    const lista = document.getElementById('listaTransacoes');
+    let grafico;
+
+    function atualizarLista(transacoes) {
+      lista.innerHTML = '';
+      transacoes.forEach((t, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de R$${Number(t.valor).toFixed(2)} (${t.descricao})`;
+        lista.appendChild(li);
+      });
+    }
+
+    function atualizarGrafico(transacoes) {
+      const entradas = transacoes.filter(t => t.tipo === 'entrada')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saidas = transacoes.filter(t => t.tipo === 'saida')
+        .reduce((total, t) => total + Number(t.valor), 0);
+
+      const ctx = document.getElementById('graficoEntradasSaidas').getContext('2d');
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [entradas, saidas],
+            backgroundColor: ['#4CAF50', '#F44336'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    function carregarDados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      atualizarLista(transacoes);
+      atualizarGrafico(transacoes);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const tipo = form.tipo.value;
+      const valor = parseFloat(form.valor.value);
+      const descricao = form.descricao.value;
+      const data = form.data.value;
+
+      const nova = { tipo, valor, descricao, data };
+
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(nova);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+
+      form.reset();
+      carregarDados();
+    });
+
+    document.addEventListener('DOMContentLoaded', carregarDados);
+  </script>
 </body>
 </html>
