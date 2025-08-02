@@ -61,10 +61,7 @@ button:hover {
   background-color: #0055aa;
 }
 
-/* ----------------------------------- */
 /* RESPONSIVIDADE - para telas menores */
-/* ----------------------------------- */
-
 @media (max-width: 600px) {
   body {
     padding: 0 10px;
