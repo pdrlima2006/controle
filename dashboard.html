@@ -57,18 +57,6 @@
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
 
-  <h2>💸 Entradas vs Saídas</h2>
-  <canvas id="grafico-transacoes"></canvas>
-
-  <h2>📅 Planejamento Mensal</h2>
-  <canvas id="grafico-planejamento"></canvas>
-
-  <h2>📄 Extrato Geral</h2>
-  <canvas id="grafico-extrato"></canvas>
-
-  <h2>🏦 Investimentos</h2>
-  <canvas id="grafico-investimentos"></canvas>
-
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
