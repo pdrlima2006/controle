@@ -3,153 +3,195 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🏦 Investimentos</title>
+  <title>💸 Entradas e Saídas</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #f9f9f9;
       padding: 20px;
     }
-
     header {
-      background: #003366;
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-
-    th {
       background-color: #003366;
       color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
     }
-
-    a {
-      display: block;
+    form, .filtros {
+      background: white;
+      padding: 20px;
       margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    label, select, input {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #003366;
+      text-decoration: none;
+    }
+    canvas {
+      margin-top: 30px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    ul {
+      margin-top: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    li {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <header><h1>🏦 Investimentos</h1></header>
-  <main>
-    <form id="form-investimento">
-      <label>Instituição:</label>
-      <input type="text" name="banco" required />
+  <header><h1>💸 Entradas e Saídas</h1></header>
 
-      <label>Tipo de Investimento:</label>
-      <input type="text" name="tipo" required />
+  <main>
+    <form id="transacaoForm">
+      <label>Tipo:</label>
+      <select name="tipo" required>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
 
       <label>Valor:</label>
-      <input type="text" name="valor" id="valor" required />
+      <input type="number" name="valor" step="0.01" required />
+
+      <label>Descrição:</label>
+      <input type="text" name="descricao" required />
+
+      <label>Data:</label>
+      <input type="date" name="data" required />
 
       <button type="submit">Salvar</button>
     </form>
 
-    <table id="tabela-investimentos">
-      <thead>
-        <tr>
-          <th>Instituição</th>
-          <th>Tipo</th>
-          <th>Valor</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
     <a href="dashboard.html">← Voltar ao Painel</a>
+
+    <div class="filtros">
+      <h2>📅 Filtrar por Mês</h2>
+      <label for="filtroMes">Selecione o mês:</label>
+      <input type="month" id="filtroMes" />
+      <button onclick="filtrarPorMes()">Gerar Gráfico do Mês</button>
+    </div>
+
+    <h2>📋 Histórico</h2>
+    <ul id="listaTransacoes"></ul>
+
+    <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
+    <canvas id="graficoEntradasSaidas" width="400" height="400"></canvas>
   </main>
 
   <script>
-    const form = document.getElementById('form-investimento');
-    const valorInput = document.getElementById('valor');
-    const tabelaBody = document.querySelector('#tabela-investimentos tbody');
+    const form = document.getElementById('transacaoForm');
+    const lista = document.getElementById('listaTransacoes');
+    const inputFiltroMes = document.getElementById('filtroMes');
+    let grafico;
 
-    // Formatar como moeda brasileira (R$)
-    function formatarMoeda(input) {
-      let valor = input.value.replace(/\D/g, "");
-      valor = (parseInt(valor) / 100).toFixed(2);
-      input.value = parseFloat(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
+    function formatarValor(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function atualizarLista(transacoes) {
+      lista.innerHTML = '';
+      transacoes.forEach((t) => {
+        const li = document.createElement('li');
+        li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
+        lista.appendChild(li);
       });
     }
 
-    valorInput.addEventListener("input", () => formatarMoeda(valorInput));
+    function atualizarGrafico(transacoes) {
+      const entradas = transacoes.filter(t => t.tipo === 'entrada')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saidas = transacoes.filter(t => t.tipo === 'saida')
+        .reduce((total, t) => total + Number(t.valor), 0);
 
-    // Carregar dados do localStorage ao iniciar
-    const investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
+      const ctx = document.getElementById('graficoEntradasSaidas').getContext('2d');
+      if (grafico) grafico.destroy();
 
-    function atualizarTabela() {
-      tabelaBody.innerHTML = "";
-      investimentos.forEach(invest => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${invest.banco}</td>
-          <td>${invest.tipo}</td>
-          <td>R$ ${invest.valor.toFixed(2).replace(".", ",")}</td>
-        `;
-        tabelaBody.appendChild(tr);
+      grafico = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [entradas, saidas],
+            backgroundColor: ['#4CAF50', '#F44336'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
       });
     }
 
-    atualizarTabela();
+    function carregarDados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      atualizarLista(transacoes);
+    }
 
-    // Salvar novo investimento
+    function filtrarPorMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert('Selecione um mês válido!');
+        return;
+      }
+
+      const [ano, mes] = mesSelecionado.split("-");
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      atualizarGrafico(filtradas);
+    }
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const banco = form.elements['banco'].value.trim();
-      const tipo = form.elements['tipo'].value.trim();
-      const valorStr = form.elements['valor'].value.replace(/[^\d,-]/g, "").replace(",", ".");
-      const valor = parseFloat(valorStr);
+      const tipo = form.tipo.value;
+      const valor = parseFloat(form.valor.value);
+      const descricao = form.descricao.value;
+      const data = form.data.value;
 
-      if (!banco || !tipo || isNaN(valor)) return;
+      const nova = { tipo, valor, descricao, data };
 
-      const novo = { banco, tipo, valor };
-      investimentos.push(novo);
-      localStorage.setItem('investimentos', JSON.stringify(investimentos));
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(nova);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
 
       form.reset();
-      tabelaBody.innerHTML = "";
-      atualizarTabela();
+      carregarDados();
     });
+
+    document.addEventListener('DOMContentLoaded', carregarDados);
   </script>
 </body>
 </html>
