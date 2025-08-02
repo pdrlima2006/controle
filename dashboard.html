@@ -30,11 +30,17 @@
       font-weight: bold;
     }
     canvas {
-      margin-top: 30px;
+      margin: 30px 0;
       background: white;
       padding: 10px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: block;
+      max-width: 600px;
+      width: 100%;
+    }
+    h2 {
+      margin-top: 40px;
     }
   </style>
 </head>
@@ -51,65 +57,84 @@
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
 
-  <!-- Aqui vai o gráfico diretamente no painel -->
-  <canvas id="grafico-transacoes" width="600" height="300"></canvas>
+  <h2>💸 Entradas vs Saídas</h2>
+  <canvas id="grafico-transacoes"></canvas>
+
+  <h2>📅 Planejamento Mensal</h2>
+  <canvas id="grafico-planejamento"></canvas>
+
+  <h2>📄 Extrato Geral</h2>
+  <canvas id="grafico-extrato"></canvas>
+
+  <h2>🏦 Investimentos</h2>
+  <canvas id="grafico-investimentos"></canvas>
 
   <script>
-    function gerarGraficoPainel() {
+    document.addEventListener('DOMContentLoaded', () => {
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
 
-      const entradasPorMes = {};
-      const saidasPorMes = {};
-
+      let totalEntradas = 0, totalSaidas = 0;
       transacoes.forEach((t) => {
-        const mes = t.data?.slice(0, 7); // yyyy-mm
-        if (!mes) return;
-        if (t.tipo === 'entrada') {
-          entradasPorMes[mes] = (entradasPorMes[mes] || 0) + t.valor;
-        } else {
-          saidasPorMes[mes] = (saidasPorMes[mes] || 0) + t.valor;
-        }
+        if (t.tipo === 'entrada') totalEntradas += t.valor;
+        else totalSaidas += t.valor;
       });
 
-      const meses = [...new Set([...Object.keys(entradasPorMes), ...Object.keys(saidasPorMes)])].sort();
-      const entradas = meses.map((m) => entradasPorMes[m] || 0);
-      const saidas = meses.map((m) => saidasPorMes[m] || 0);
-
-      const ctx = document.getElementById('grafico-transacoes').getContext('2d');
-
-      new Chart(ctx, {
-        type: 'bar',
+      // 💸 Entradas vs Saídas
+      new Chart(document.getElementById('grafico-transacoes'), {
+        type: 'pie',
         data: {
-          labels: meses,
-          datasets: [
-            {
-              label: 'Entradas',
-              data: entradas,
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 1
-            },
-            {
-              label: 'Saídas',
-              data: saidas,
-              backgroundColor: 'rgba(255, 99, 132, 0.6)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [totalEntradas, totalSaidas],
+            backgroundColor: ['#4bc0c0', '#ff6384']
+          }]
         }
       });
-    }
 
-    document.addEventListener('DOMContentLoaded', gerarGraficoPainel);
+      // 📅 Planejamento Mensal (simulado)
+      const planejado = 3000;
+      const realizado = totalEntradas - totalSaidas;
+      new Chart(document.getElementById('grafico-planejamento'), {
+        type: 'pie',
+        data: {
+          labels: ['Planejado', 'Realizado'],
+          datasets: [{
+            data: [planejado, realizado],
+            backgroundColor: ['#36a2eb', '#ffcd56']
+          }]
+        }
+      });
+
+      // 📄 Extrato Geral
+      const saldo = totalEntradas - totalSaidas;
+      new Chart(document.getElementById('grafico-extrato'), {
+        type: 'pie',
+        data: {
+          labels: ['Saldo Positivo', 'Saldo Negativo'],
+          datasets: [{
+            data: [saldo >= 0 ? saldo : 0, saldo < 0 ? Math.abs(saldo) : 0],
+            backgroundColor: ['#66bb6a', '#ef5350']
+          }]
+        }
+      });
+
+      // 🏦 Investimentos (simulados)
+      const investimentos = {
+        'Renda Fixa': 2500,
+        'Ações': 1200,
+        'Cripto': 800
+      };
+      new Chart(document.getElementById('grafico-investimentos'), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(investimentos),
+          datasets: [{
+            data: Object.values(investimentos),
+            backgroundColor: ['#9575cd', '#4dd0e1', '#ffb74d']
+          }]
+        }
+      });
+    });
   </script>
 </body>
 </html>
