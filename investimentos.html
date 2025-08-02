@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,22 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🏦 Investimentos</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    header {
+      background: #003366;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #003366;
+      color: white;
+    }
+
+    a {
+      display: block;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
   <header><h1>🏦 Investimentos</h1></header>
   <main>
-    <form>
-      
-<label>Instituição:</label>
-<input type="text" name="banco" required />
-<label>Tipo de Investimento:</label>
-<input type="text" name="tipo" required />
-<label>Valor:</label>
-<input type="number" name="valor" required />
+    <form id="form-investimento">
+      <label>Instituição:</label>
+      <input type="text" name="banco" required />
+
+      <label>Tipo de Investimento:</label>
+      <input type="text" name="tipo" required />
+
+      <label>Valor:</label>
+      <input type="text" name="valor" id="valor" required />
 
       <button type="submit">Salvar</button>
     </form>
+
+    <table id="tabela-investimentos">
+      <thead>
+        <tr>
+          <th>Instituição</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
     <a href="dashboard.html">← Voltar ao Painel</a>
   </main>
+
+  <script>
+    const form = document.getElementById('form-investimento');
+    const valorInput = document.getElementById('valor');
+    const tabelaBody = document.querySelector('#tabela-investimentos tbody');
+
+    // Formatar como moeda brasileira (R$)
+    function formatarMoeda(input) {
+      let valor = input.value.replace(/\D/g, "");
+      valor = (parseInt(valor) / 100).toFixed(2);
+      input.value = parseFloat(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    }
+
+    valorInput.addEventListener("input", () => formatarMoeda(valorInput));
+
+    // Carregar dados do localStorage ao iniciar
+    const investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
+
+    function atualizarTabela() {
+      tabelaBody.innerHTML = "";
+      investimentos.forEach(invest => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${invest.banco}</td>
+          <td>${invest.tipo}</td>
+          <td>R$ ${invest.valor.toFixed(2).replace(".", ",")}</td>
+        `;
+        tabelaBody.appendChild(tr);
+      });
+    }
+
+    atualizarTabela();
+
+    // Salvar novo investimento
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const banco = form.elements['banco'].value.trim();
+      const tipo = form.elements['tipo'].value.trim();
+      const valorStr = form.elements['valor'].value.replace(/[^\d,-]/g, "").replace(",", ".");
+      const valor = parseFloat(valorStr);
+
+      if (!banco || !tipo || isNaN(valor)) return;
+
+      const novo = { banco, tipo, valor };
+      investimentos.push(novo);
+      localStorage.setItem('investimentos', JSON.stringify(investimentos));
+
+      form.reset();
+      tabelaBody.innerHTML = "";
+      atualizarTabela();
+    });
+  </script>
 </body>
 </html>
