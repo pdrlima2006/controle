@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Seu CSS existente */
     #graficoContainer {
       display: none;
       margin-top: 30px;
@@ -27,19 +28,70 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
+    /* Novo CSS para o formulário inline e responsivo */
+    form#planejamentoForm {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    form#planejamentoForm > label {
+      min-width: 130px;
+      margin: 0;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    form#planejamentoForm > input[type="month"],
+    form#planejamentoForm > input[type="text"] {
+      flex: 1 1 150px;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    form#planejamentoForm > button[type="submit"] {
+      padding: 8px 16px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      form#planejamentoForm {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      form#planejamentoForm > label {
+        margin-bottom: 5px;
+      }
+
+      form#planejamentoForm > input,
+      form#planejamentoForm > button {
+        flex: none;
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <header><h1>📅 Planejamento Mensal</h1></header>
   <main>
     <form id="planejamentoForm">
-      <label>Mês:</label>
-      <input type="month" name="mes" required />
+      <label for="mes">Mês:</label>
+      <input type="month" name="mes" id="mes" required />
 
-      <label>Previsão de Receitas:</label>
+      <label for="receitas">Previsão de Receitas:</label>
       <input type="text" name="receitas" id="receitas" required />
 
-      <label>Previsão de Despesas:</label>
+      <label for="despesas">Previsão de Despesas:</label>
       <input type="text" name="despesas" id="despesas" required />
 
       <button type="submit">Salvar</button>
