@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📅 Planejamento Mensal</title>
-  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -22,7 +21,7 @@
       border-radius: 6px;
     }
 
-    form#form-planejamento {
+    form {
       background: white;
       padding: 20px;
       margin-top: 20px;
@@ -72,7 +71,7 @@
     }
 
     @media (max-width: 600px) {
-      form#form-planejamento {
+      form {
         flex-direction: column;
         align-items: stretch;
       }
@@ -80,11 +79,6 @@
       .campo, button {
         width: 100%;
       }
-    }
-
-    a {
-      display: block;
-      margin-top: 20px;
     }
   </style>
 </head>
@@ -111,12 +105,9 @@
     <canvas id="graficoPlanejamento" height="120"></canvas>
   </div>
 
-  <a href="dashboard.html">← Voltar ao Painel</a>
-
   <script>
     const form = document.getElementById('form-planejamento');
     const ctx = document.getElementById('graficoPlanejamento').getContext('2d');
-
     let dados = JSON.parse(localStorage.getItem('planejamento')) || [];
 
     const grafico = new Chart(ctx, {
@@ -164,7 +155,7 @@
       const receita = parseFloat(form.elements['receita'].value);
       const despesa = parseFloat(form.elements['despesa'].value);
 
-      const mes = new Date(mesInput).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+      const mes = new Date(mesInput + "-01").toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
 
       if (!isNaN(receita) && !isNaN(despesa)) {
         dados.push({ mes, receita, despesa });
