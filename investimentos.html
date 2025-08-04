@@ -19,7 +19,6 @@
       padding: 10px;
       border-radius: 6px;
       text-align: center;
-      margin-bottom: 20px;
     }
 
     form#form-investimento {
@@ -30,15 +29,14 @@
       margin-bottom: 30px;
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
-      align-items: flex-end;
+      gap: 15px;
+      align-items: center;
     }
 
     .form-group {
-      flex: 1;
-      min-width: 200px;
       display: flex;
       flex-direction: column;
+      flex: 1 1 200px;
     }
 
     .form-group label {
@@ -52,14 +50,14 @@
       border-radius: 4px;
     }
 
-    form#form-investimento button {
+    button[type="submit"] {
       padding: 10px 20px;
       background-color: #003366;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      height: 42px;
+      flex-shrink: 0;
     }
 
     table {
@@ -90,7 +88,6 @@
       font-weight: bold;
     }
 
-    /* Responsivo para celular */
     @media (max-width: 600px) {
       form#form-investimento {
         flex-direction: column;
@@ -101,7 +98,7 @@
         width: 100%;
       }
 
-      form#form-investimento button {
+      button[type="submit"] {
         width: 100%;
       }
     }
@@ -148,6 +145,7 @@
     const valorInput = document.getElementById('valor');
     const tabelaBody = document.querySelector('#tabela-investimentos tbody');
 
+    // Formatar como moeda brasileira
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
       valor = (parseInt(valor) / 100).toFixed(2);
