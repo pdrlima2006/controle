@@ -20,24 +20,42 @@
       text-align: center;
     }
 
-    form {
+    form#form-investimento {
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       margin-bottom: 30px;
+
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
     }
 
-    label {
-      display: block;
-      margin-top: 10px;
+    form#form-investimento > label {
+      min-width: 140px;
+      margin: 0;
+      white-space: nowrap;
+      font-weight: 600;
     }
 
-    input, button {
-      width: 100%;
+    form#form-investimento > input[type="text"] {
+      flex: 1 1 150px;
       padding: 8px;
-      margin-top: 5px;
       box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    form#form-investimento > button[type="submit"] {
+      padding: 10px 20px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     table {
@@ -64,19 +82,37 @@
       display: block;
       margin-top: 20px;
     }
+
+    /* Responsividade: no celular campos empilhados */
+    @media (max-width: 600px) {
+      form#form-investimento {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      form#form-investimento > label {
+        margin-bottom: 5px;
+      }
+
+      form#form-investimento > input,
+      form#form-investimento > button {
+        flex: none;
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <header><h1>🏦 Investimentos</h1></header>
   <main>
     <form id="form-investimento">
-      <label>Instituição:</label>
-      <input type="text" name="banco" required />
+      <label for="banco">Instituição:</label>
+      <input type="text" name="banco" id="banco" required />
 
-      <label>Tipo de Investimento:</label>
-      <input type="text" name="tipo" required />
+      <label for="tipo">Tipo de Investimento:</label>
+      <input type="text" name="tipo" id="tipo" required />
 
-      <label>Valor:</label>
+      <label for="valor">Valor:</label>
       <input type="text" name="valor" id="valor" required />
 
       <button type="submit">Salvar</button>
@@ -147,7 +183,6 @@
       localStorage.setItem('investimentos', JSON.stringify(investimentos));
 
       form.reset();
-      tabelaBody.innerHTML = "";
       atualizarTabela();
     });
   </script>
