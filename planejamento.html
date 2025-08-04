@@ -7,158 +7,212 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 20px;
+    /* Seu CSS existente */
+    #graficoContainer {
+      display: none;
+      margin-top: 30px;
+      max-width: 500px;
     }
-
-    header {
-      background-color: #003366;
-      color: white;
+    #tituloMes {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    #botaoMostrarGrafico {
+      display: none;
+      margin-top: 20px;
       padding: 10px;
-      border-radius: 6px;
-      text-align: center;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
-    form {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
-    }
-
-    .linha-formulario {
+    /* Novo CSS para o formulário inline e responsivo */
+    form#planejamentoForm {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
+      gap: 15px;
+      align-items: center;
     }
 
-    .campo {
-      flex: 1;
-      min-width: 200px;
+    form#planejamentoForm > label {
+      min-width: 130px;
+      margin: 0;
+      white-space: nowrap;
+      font-weight: 600;
     }
 
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 8px;
+    form#planejamentoForm > input[type="month"],
+    form#planejamentoForm > input[type="text"] {
+      flex: 1 1 150px;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       box-sizing: border-box;
     }
 
-    canvas {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    a {
-      display: block;
-      margin-top: 20px;
+    form#planejamentoForm > button[type="submit"] {
+      padding: 8px 16px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     @media (max-width: 600px) {
-      .linha-formulario {
+      form#planejamentoForm {
         flex-direction: column;
+        align-items: stretch;
+      }
+
+      form#planejamentoForm > label {
+        margin-bottom: 5px;
+      }
+
+      form#planejamentoForm > input,
+      form#planejamentoForm > button {
+        flex: none;
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
   <header><h1>📅 Planejamento Mensal</h1></header>
-
   <main>
-    <form id="form-planejamento">
-      <div class="linha-formulario">
-        <div class="campo">
-          <label>Mês:</label>
-          <input type="text" name="mes" required />
-        </div>
+    <form id="planejamentoForm">
+      <label for="mes">Mês:</label>
+      <input type="month" name="mes" id="mes" required />
 
-        <div class="campo">
-          <label>Receita (R$):</label>
-          <input type="number" name="receita" required />
-        </div>
+      <label for="receitas">Previsão de Receitas:</label>
+      <input type="text" name="receitas" id="receitas" required />
 
-        <div class="campo">
-          <label>Despesa (R$):</label>
-          <input type="number" name="despesa" required />
-        </div>
-      </div>
+      <label for="despesas">Previsão de Despesas:</label>
+      <input type="text" name="despesas" id="despesas" required />
+
       <button type="submit">Salvar</button>
     </form>
 
-    <canvas id="grafico"></canvas>
-
     <a href="dashboard.html">← Voltar ao Painel</a>
+
+    <!-- Botão para mostrar o gráfico -->
+    <button id="botaoMostrarGrafico" onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
+
+    <!-- Container do gráfico -->
+    <div id="graficoContainer">
+      <div id="tituloMes"></div>
+      <canvas id="graficoPizza"></canvas>
+    </div>
   </main>
 
   <script>
-    const form = document.getElementById('form-planejamento');
-    const ctx = document.getElementById('grafico').getContext('2d');
+    const receitasInput = document.getElementById('receitas');
+    const despesasInput = document.getElementById('despesas');
+    const form = document.getElementById('planejamentoForm');
+    const graficoContainer = document.getElementById('graficoContainer');
+    const tituloMes = document.getElementById('tituloMes');
+    const ctx = document.getElementById('graficoPizza').getContext('2d');
+    const botaoMostrarGrafico = document.getElementById('botaoMostrarGrafico');
+    let grafico;
 
-    let dados = JSON.parse(localStorage.getItem('planejamentos')) || [];
+    function formatarMoeda(input) {
+      let valor = input.value.replace(/\D/g, "");
+      valor = (parseInt(valor) / 100).toFixed(2);
+      input.value = parseFloat(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    }
 
-    function atualizarGrafico() {
-      const labels = dados.map(d => d.mes);
-      const receitas = dados.map(d => d.receita);
-      const despesas = dados.map(d => d.despesa);
+    [receitasInput, despesasInput].forEach(input => {
+      input.addEventListener("input", () => formatarMoeda(input));
+    });
 
-      new Chart(ctx, {
-        type: 'bar',
+    function exibirGrafico(mesInput, receitas, despesas) {
+      const [ano, mes] = mesInput.split("-");
+      const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
+
+      tituloMes.textContent = `Planejamento de ${nomeMes} de ${ano}`;
+
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'pie',
         data: {
-          labels,
-          datasets: [
-            {
-              label: 'Receita',
-              data: receitas,
-              backgroundColor: 'green',
-            },
-            {
-              label: 'Despesa',
-              data: despesas,
-              backgroundColor: 'red',
-            }
-          ]
+          labels: [
+            `Receitas: R$ ${receitas.toFixed(2).replace('.', ',')}`,
+            `Despesas: R$ ${despesas.toFixed(2).replace('.', ',')}`
+          ],
+          datasets: [{
+            data: [receitas, despesas],
+            backgroundColor: ['#4CAF50', '#F44336']
+          }]
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              position: 'top'
-            },
-            title: {
-              display: true,
-              text: 'Planejamento Mensal'
+              position: 'bottom'
             }
           }
         }
       });
+
+      graficoContainer.style.display = 'block';
     }
 
-    atualizarGrafico();
+    function mostrarGrafico() {
+      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
+      if (salvo) {
+        exibirGrafico(salvo.mes, salvo.receitas, salvo.despesas);
+      }
+    }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      const mes = form.elements['mes'].value;
-      const receita = parseFloat(form.elements['receita'].value);
-      const despesa = parseFloat(form.elements['despesa'].value);
+      const mesInput = form.elements['mes'].value;
+      const receitasStr = receitasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
+      const despesasStr = despesasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
 
-      if (!mes || isNaN(receita) || isNaN(despesa)) return;
+      const receitas = parseFloat(receitasStr);
+      const despesas = parseFloat(despesasStr);
 
-      dados.push({ mes, receita, despesa });
-      localStorage.setItem('planejamentos', JSON.stringify(dados));
+      if (!mesInput || isNaN(receitas) || isNaN(despesas)) return;
 
-      form.reset();
-      atualizarGrafico();
+      const dados = {
+        mes: mesInput,
+        receitas: receitas,
+        despesas: despesas
+      };
+
+      localStorage.setItem('planejamentoMensal', JSON.stringify(dados));
+
+      // Mostra botão para ver o gráfico
+      botaoMostrarGrafico.style.display = 'block';
+      graficoContainer.style.display = 'none'; // esconde o gráfico até o botão ser clicado
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
+      if (salvo) {
+        form.elements['mes'].value = salvo.mes;
+        receitasInput.value = salvo.receitas.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+        despesasInput.value = salvo.despesas.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+
+        // Exibe botão para ver gráfico
+        botaoMostrarGrafico.style.display = 'block';
+      }
     });
   </script>
 </body>
