@@ -7,42 +7,36 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    #graficoContainer {
-      display: none;
-      margin-top: 30px;
-      max-width: 500px;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
     }
 
-    #tituloMes {
-      margin-top: 20px;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-
-    #botaoMostrarGrafico {
-      display: none;
-      margin-top: 20px;
-      padding: 10px;
+    header {
       background: #003366;
       color: white;
-      border: none;
+      padding: 20px;
+      text-align: center;
       border-radius: 5px;
-      cursor: pointer;
+      margin-bottom: 20px;
     }
 
     form#planejamentoForm {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
-      margin-bottom: 20px;
       align-items: flex-end;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      min-width: 200px;
-      flex: 1;
+      flex: 1 1 200px;
     }
 
     .form-group label {
@@ -66,16 +60,43 @@
       height: 42px;
     }
 
+    #graficoContainer {
+      display: none;
+      margin-top: 30px;
+      max-width: 500px;
+    }
+
+    #tituloMes {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    #botaoMostrarGrafico {
+      display: none;
+      margin-top: 20px;
+      padding: 10px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #003366;
+    }
+
     @media (max-width: 600px) {
       form#planejamentoForm {
         flex-direction: column;
-        align-items: stretch;
       }
-
       .form-group {
         width: 100%;
       }
-
       form#planejamentoForm button {
         width: 100%;
       }
