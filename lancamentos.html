@@ -222,7 +222,6 @@
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.text(`RELATÓRIO DE ${nomeMes.toUpperCase()} DE ${ano}`, 105, 20, null, null, 'center');
-
       doc.setLineWidth(0.5);
       doc.line(10, 25, 200, 25);
 
@@ -243,4 +242,54 @@
       doc.line(10, y - 4, 200, y - 4);
 
       filtradas.forEach(t => {
-        if (y > 
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(12);
+        }
+        doc.text(t.data, colDataX, y);
+        doc.text(t.tipo.toUpperCase(), colTipoX, y);
+        doc.text(formatarValor(Number(t.valor)), colValorX, y);
+        doc.text(t.descricao, colDescX, y);
+        y += 8;
+      });
+
+      doc.save(`relatorio_${ano}-${mes}.pdf`);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const tipo = form.tipo.value;
+      const valor = parseFloat(form.valor.value);
+      const descricao = form.descricao.value;
+      const data = form.data.value;
+      const nova = { tipo, valor, descricao, data };
+
+      const arquivo = form.notaFiscal.files[0];
+      if (arquivo) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          nova.notaFiscalBase64 = reader.result;
+          nova.notaFiscalNome = arquivo.name;
+          salvarTransacao(nova);
+        };
+        reader.readAsDataURL(arquivo);
+      } else {
+        salvarTransacao(nova);
+      }
+    });
+
+    function salvarTransacao(nova) {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(nova);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      form.reset();
+      carregarDados();
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarDados);
+  </script>
+</body>
+</html>
