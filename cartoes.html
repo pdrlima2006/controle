@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💳 Cartões de Crédito</title>
-  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
       padding: 20px;
+      margin: 0;
     }
 
     header {
@@ -28,13 +28,31 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
 
-    label, input {
-      display: block;
-      margin-bottom: 10px;
-      width: 100%;
+    .linha-campos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .campo {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .campo label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .campo input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     button {
+      margin-top: 15px;
       padding: 10px;
       background: #4a148c;
       color: white;
@@ -45,9 +63,13 @@
 
     a {
       display: inline-block;
-      margin-top: 10px;
+      margin-top: 20px;
       color: #4a148c;
       text-decoration: none;
+    }
+
+    h2 {
+      margin-top: 40px;
     }
 
     .cartao {
@@ -82,23 +104,40 @@
     }
 
     .cartao .info {
-      margin-top: 15px;
+      margin-top: 10px;
       font-size: 14px;
+    }
+
+    #listaCartoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
     }
   </style>
 </head>
 <body>
-  <header><h1>💳 Cartões de Crédito</h1></header>
+  <header>
+    <h1>💳 Cartões de Crédito</h1>
+  </header>
+
   <main>
     <form id="cartaoForm">
-      <label for="nome">Nome do Cartão:</label>
-      <input type="text" id="nome" name="nome" required>
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="nome">Nome do Cartão:</label>
+          <input type="text" id="nome" name="nome" required />
+        </div>
 
-      <label for="limite">Limite:</label>
-      <input type="number" id="limite" name="limite" required>
+        <div class="campo">
+          <label for="limite">Limite:</label>
+          <input type="number" id="limite" name="limite" required />
+        </div>
 
-      <label for="fatura">Fatura Atual:</label>
-      <input type="number" id="fatura" name="fatura" required>
+        <div class="campo">
+          <label for="fatura">Fatura Atual:</label>
+          <input type="number" id="fatura" name="fatura" required />
+        </div>
+      </div>
 
       <button type="submit">Salvar</button>
     </form>
@@ -140,7 +179,7 @@
         const div = document.createElement('div');
         div.className = 'cartao';
         div.innerHTML = `
-          <img class="bandeira" src="${bandeira}" alt="Bandeira">
+          <img class="bandeira" src="${bandeira}" alt="Bandeira" />
           <div class="numero">${numero}</div>
           <div class="nome">💳 ${c.nome}</div>
           <div class="info">💰 Limite: R$ ${limite.toFixed(2)}</div>
@@ -158,6 +197,7 @@
       const fatura = parseFloat(form.fatura.value);
 
       const novoCartao = { nome, limite, fatura };
+
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.push(novoCartao);
       localStorage.setItem('cartoes', JSON.stringify(cartoes));
