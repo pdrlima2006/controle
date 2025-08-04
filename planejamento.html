@@ -7,17 +7,18 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Seu CSS existente */
     #graficoContainer {
       display: none;
       margin-top: 30px;
       max-width: 500px;
     }
+
     #tituloMes {
       margin-top: 20px;
       font-size: 1.2rem;
       font-weight: bold;
     }
+
     #botaoMostrarGrafico {
       display: none;
       margin-top: 20px;
@@ -29,46 +30,40 @@
       cursor: pointer;
     }
 
-    /* Formulário flex com grupos label+input */
     form#planejamentoForm {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      align-items: flex-end;
     }
 
-    form#planejamentoForm > .form-group {
+    .form-group {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 250px;
-      flex: 1 1 250px;
-    }
-
-    form#planejamentoForm > .form-group label {
-      min-width: 130px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    form#planejamentoForm > .form-group input {
+      flex-direction: column;
+      min-width: 200px;
       flex: 1;
-      padding: 6px 10px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .form-group input {
+      padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      box-sizing: border-box;
     }
 
-    form#planejamentoForm > button[type="submit"] {
-      padding: 8px 16px;
+    form#planejamentoForm button[type="submit"] {
+      padding: 10px 16px;
       background-color: #003366;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      flex-shrink: 0;
-      height: 40px;
-      align-self: center;
+      height: 42px;
     }
 
     @media (max-width: 600px) {
@@ -77,20 +72,11 @@
         align-items: stretch;
       }
 
-      form#planejamentoForm > .form-group {
-        flex-direction: column;
-        min-width: auto;
-      }
-
-      form#planejamentoForm > .form-group label {
-        margin-bottom: 5px;
-      }
-
-      form#planejamentoForm > .form-group input {
+      .form-group {
         width: 100%;
       }
 
-      form#planejamentoForm > button {
+      form#planejamentoForm button {
         width: 100%;
       }
     }
@@ -117,10 +103,8 @@
 
     <a href="dashboard.html">← Voltar ao Painel</a>
 
-    <!-- Botão para mostrar o gráfico -->
     <button id="botaoMostrarGrafico" onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
 
-    <!-- Container do gráfico -->
     <div id="graficoContainer">
       <div id="tituloMes"></div>
       <canvas id="graficoPizza"></canvas>
@@ -210,9 +194,8 @@
 
       localStorage.setItem('planejamentoMensal', JSON.stringify(dados));
 
-      // Mostra botão para ver o gráfico
       botaoMostrarGrafico.style.display = 'block';
-      graficoContainer.style.display = 'none'; // esconde o gráfico até o botão ser clicado
+      graficoContainer.style.display = 'none';
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -228,7 +211,6 @@
           currency: "BRL",
         });
 
-        // Exibe botão para ver gráfico
         botaoMostrarGrafico.style.display = 'block';
       }
     });
