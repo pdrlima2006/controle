@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🏦 Investimentos</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,15 +29,14 @@
       margin-bottom: 30px;
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
-      align-items: flex-end;
+      gap: 15px;
+      align-items: center;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      flex: 1;
-      min-width: 200px;
+      flex: 1 1 200px;
     }
 
     .form-group label {
@@ -52,7 +50,7 @@
       border-radius: 4px;
     }
 
-    form#form-investimento button {
+    button[type="submit"] {
       height: 42px;
       padding: 10px 20px;
       background-color: #003366;
@@ -101,7 +99,7 @@
         width: 100%;
       }
 
-      form#form-investimento button {
+      button[type="submit"] {
         width: 100%;
       }
     }
@@ -148,7 +146,6 @@
     const valorInput = document.getElementById('valor');
     const tabelaBody = document.querySelector('#tabela-investimentos tbody');
 
-    // Formatar como moeda brasileira
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
       valor = (parseInt(valor) / 100).toFixed(2);
