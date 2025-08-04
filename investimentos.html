@@ -19,6 +19,7 @@
       padding: 10px;
       border-radius: 6px;
       text-align: center;
+      margin-bottom: 20px;
     }
 
     form#form-investimento {
@@ -29,14 +30,15 @@
       margin-bottom: 30px;
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      align-items: center;
+      gap: 20px;
+      align-items: flex-end;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      flex: 1 1 200px;
+      flex: 1;
+      min-width: 200px;
     }
 
     .form-group label {
@@ -50,7 +52,8 @@
       border-radius: 4px;
     }
 
-    button[type="submit"] {
+    form#form-investimento button {
+      height: 42px;
       padding: 10px 20px;
       background-color: #003366;
       color: white;
@@ -98,7 +101,7 @@
         width: 100%;
       }
 
-      button[type="submit"] {
+      form#form-investimento button {
         width: 100%;
       }
     }
