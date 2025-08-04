@@ -68,11 +68,11 @@
     </div>
     <div class="form-group">
       <label for="receitas">Previsão de Receitas:</label>
-      <input type="text" name="receitas" id="receitas" required />
+      <input type="text" name="receitas" id="receitas" required inputmode="numeric" pattern="[0-9.,]*" />
     </div>
     <div class="form-group">
       <label for="despesas">Previsão de Despesas:</label>
-      <input type="text" name="despesas" id="despesas" required />
+      <input type="text" name="despesas" id="despesas" required inputmode="numeric" pattern="[0-9.,]*" />
     </div>
     <button type="submit">Salvar</button>
   </form>
@@ -82,9 +82,19 @@
     const despesasInput = document.getElementById('despesas');
 
     function formatarMoeda(input) {
+      // Remove tudo que não for número
       let valor = input.value.replace(/\D/g, "");
-      valor = (parseInt(valor) / 100).toFixed(2);
-      input.value = parseFloat(valor).toLocaleString("pt-BR", {
+
+      if (!valor) {
+        input.value = "";
+        return;
+      }
+
+      // Transforma em número, divide por 100 e formata
+      valor = (parseInt(valor, 10) / 100).toFixed(2);
+
+      // Ajusta valor no formato moeda brasileiro
+      input.value = Number(valor).toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
       });
@@ -92,11 +102,11 @@
 
     [receitasInput, despesasInput].forEach(input => {
       input.addEventListener("input", () => formatarMoeda(input));
+      input.addEventListener("blur", () => formatarMoeda(input));
     });
 
     document.getElementById('planejamentoForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      // Aqui você pode salvar os dados, enviar ao servidor, etc.
       alert("Dados salvos!");
     });
   </script>
