@@ -26,10 +26,20 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-    label, select, input {
-      display: block;
-      margin-bottom: 10px;
-      width: 100%;
+    .linha-campos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .campo {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+    }
+    .campo input,
+    .campo select {
+      padding: 8px;
+      font-size: 14px;
     }
     button {
       padding: 10px;
@@ -38,6 +48,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      margin-top: 20px;
     }
     a {
       display: inline-block;
@@ -68,23 +79,35 @@
 
   <main>
     <form id="transacaoForm">
-      <label>Tipo:</label>
-      <select name="tipo" required>
-        <option value="entrada">Entrada</option>
-        <option value="saida">Saída</option>
-      </select>
+      <div class="linha-campos">
+        <div class="campo">
+          <label>Tipo:</label>
+          <select name="tipo" required>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
 
-      <label>Valor:</label>
-      <input type="number" name="valor" step="0.01" required />
+        <div class="campo">
+          <label>Valor:</label>
+          <input type="number" name="valor" step="0.01" required />
+        </div>
 
-      <label>Descrição:</label>
-      <input type="text" name="descricao" required />
+        <div class="campo">
+          <label>Descrição:</label>
+          <input type="text" name="descricao" required />
+        </div>
 
-      <label>Data:</label>
-      <input type="date" name="data" required />
+        <div class="campo">
+          <label>Data:</label>
+          <input type="date" name="data" required />
+        </div>
 
-      <label>Anexar Nota Fiscal (opcional):</label>
-      <input type="file" name="notaFiscal" accept=".pdf,.jpg,.jpeg,.png" />
+        <div class="campo" style="flex: 1 1 100%;">
+          <label>Anexar Nota Fiscal (opcional):</label>
+          <input type="file" name="notaFiscal" accept=".pdf,.jpg,.jpeg,.png" />
+        </div>
+      </div>
 
       <button type="submit">Salvar</button>
     </form>
