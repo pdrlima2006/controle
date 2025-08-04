@@ -29,7 +29,7 @@
       cursor: pointer;
     }
 
-    /* Novo CSS para o formulário inline e responsivo */
+    /* Formulário flex com grupos label+input */
     form#planejamentoForm {
       display: flex;
       flex-wrap: wrap;
@@ -37,16 +37,22 @@
       align-items: center;
     }
 
-    form#planejamentoForm > label {
-      min-width: 130px;
-      margin: 0;
-      white-space: nowrap;
-      font-weight: 600;
+    form#planejamentoForm > .form-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 250px;
+      flex: 1 1 250px;
     }
 
-    form#planejamentoForm > input[type="month"],
-    form#planejamentoForm > input[type="text"] {
-      flex: 1 1 150px;
+    form#planejamentoForm > .form-group label {
+      min-width: 130px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    form#planejamentoForm > .form-group input {
+      flex: 1;
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -61,6 +67,8 @@
       border-radius: 5px;
       cursor: pointer;
       flex-shrink: 0;
+      height: 40px;
+      align-self: center;
     }
 
     @media (max-width: 600px) {
@@ -69,13 +77,20 @@
         align-items: stretch;
       }
 
-      form#planejamentoForm > label {
+      form#planejamentoForm > .form-group {
+        flex-direction: column;
+        min-width: auto;
+      }
+
+      form#planejamentoForm > .form-group label {
         margin-bottom: 5px;
       }
 
-      form#planejamentoForm > input,
+      form#planejamentoForm > .form-group input {
+        width: 100%;
+      }
+
       form#planejamentoForm > button {
-        flex: none;
         width: 100%;
       }
     }
@@ -85,15 +100,18 @@
   <header><h1>📅 Planejamento Mensal</h1></header>
   <main>
     <form id="planejamentoForm">
-      <label for="mes">Mês:</label>
-      <input type="month" name="mes" id="mes" required />
-
-      <label for="receitas">Previsão de Receitas:</label>
-      <input type="text" name="receitas" id="receitas" required />
-
-      <label for="despesas">Previsão de Despesas:</label>
-      <input type="text" name="despesas" id="despesas" required />
-
+      <div class="form-group">
+        <label for="mes">Mês:</label>
+        <input type="month" name="mes" id="mes" required />
+      </div>
+      <div class="form-group">
+        <label for="receitas">Previsão de Receitas:</label>
+        <input type="text" name="receitas" id="receitas" required />
+      </div>
+      <div class="form-group">
+        <label for="despesas">Previsão de Despesas:</label>
+        <input type="text" name="despesas" id="despesas" required />
+      </div>
       <button type="submit">Salvar</button>
     </form>
 
