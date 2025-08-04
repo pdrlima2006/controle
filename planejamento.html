@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📅 Planejamento Mensal</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -16,68 +17,56 @@
     header {
       background-color: #003366;
       color: white;
-      padding: 15px;
-      text-align: center;
+      padding: 10px;
       border-radius: 6px;
+      text-align: center;
     }
 
     form {
-      background: white;
+      background-color: white;
       padding: 20px;
-      margin-top: 20px;
-      margin-bottom: 30px;
       border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .linha-formulario {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      align-items: flex-end;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      gap: 20px;
     }
 
     .campo {
-      display: flex;
-      flex-direction: column;
-      min-width: 180px;
-      flex: 1 1 200px;
+      flex: 1;
+      min-width: 200px;
     }
 
     label {
-      font-weight: bold;
+      display: block;
       margin-bottom: 5px;
     }
 
-    input {
+    input, button {
+      width: 100%;
       padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      box-sizing: border-box;
     }
 
-    button {
-      padding: 10px 20px;
-      background-color: #003366;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      height: fit-content;
-    }
-
-    #graficoContainer {
-      margin-top: 30px;
+    canvas {
       background: white;
+      padding: 10px;
       border-radius: 10px;
-      padding: 20px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
 
-    @media (max-width: 600px) {
-      form {
-        flex-direction: column;
-        align-items: stretch;
-      }
+    a {
+      display: block;
+      margin-top: 20px;
+    }
 
-      .campo, button {
-        width: 100%;
+    @media (max-width: 600px) {
+      .linha-formulario {
+        flex-direction: column;
       }
     }
   </style>
@@ -85,84 +74,91 @@
 <body>
   <header><h1>📅 Planejamento Mensal</h1></header>
 
-  <form id="form-planejamento">
-    <div class="campo">
-      <label for="mes">Mês:</label>
-      <input type="month" id="mes" required>
-    </div>
-    <div class="campo">
-      <label for="receita">Receita Prevista:</label>
-      <input type="number" id="receita" required>
-    </div>
-    <div class="campo">
-      <label for="despesa">Despesa Prevista:</label>
-      <input type="number" id="despesa" required>
-    </div>
-    <button type="submit">Salvar</button>
-  </form>
+  <main>
+    <form id="form-planejamento">
+      <div class="linha-formulario">
+        <div class="campo">
+          <label>Mês:</label>
+          <input type="text" name="mes" required />
+        </div>
 
-  <div id="graficoContainer">
-    <canvas id="graficoPlanejamento" height="120"></canvas>
-  </div>
+        <div class="campo">
+          <label>Receita (R$):</label>
+          <input type="number" name="receita" required />
+        </div>
+
+        <div class="campo">
+          <label>Despesa (R$):</label>
+          <input type="number" name="despesa" required />
+        </div>
+      </div>
+      <button type="submit">Salvar</button>
+    </form>
+
+    <canvas id="grafico"></canvas>
+
+    <a href="dashboard.html">← Voltar ao Painel</a>
+  </main>
 
   <script>
     const form = document.getElementById('form-planejamento');
-    const ctx = document.getElementById('graficoPlanejamento').getContext('2d');
-    let dados = JSON.parse(localStorage.getItem('planejamento')) || [];
+    const ctx = document.getElementById('grafico').getContext('2d');
 
-    const grafico = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: 'Receita',
-            backgroundColor: 'green',
-            data: []
-          },
-          {
-            label: 'Despesa',
-            backgroundColor: 'red',
-            data: []
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: (value) => 'R$ ' + value.toLocaleString('pt-BR')
+    let dados = JSON.parse(localStorage.getItem('planejamentos')) || [];
+
+    function atualizarGrafico() {
+      const labels = dados.map(d => d.mes);
+      const receitas = dados.map(d => d.receita);
+      const despesas = dados.map(d => d.despesa);
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Receita',
+              data: receitas,
+              backgroundColor: 'green',
+            },
+            {
+              label: 'Despesa',
+              data: despesas,
+              backgroundColor: 'red',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            title: {
+              display: true,
+              text: 'Planejamento Mensal'
             }
           }
         }
-      }
-    });
-
-    function atualizarGrafico() {
-      grafico.data.labels = dados.map(item => item.mes);
-      grafico.data.datasets[0].data = dados.map(item => item.receita);
-      grafico.data.datasets[1].data = dados.map(item => item.despesa);
-      grafico.update();
+      });
     }
 
     atualizarGrafico();
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const mesInput = form.elements['mes'].value;
+
+      const mes = form.elements['mes'].value;
       const receita = parseFloat(form.elements['receita'].value);
       const despesa = parseFloat(form.elements['despesa'].value);
 
-      const mes = new Date(mesInput + "-01").toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+      if (!mes || isNaN(receita) || isNaN(despesa)) return;
 
-      if (!isNaN(receita) && !isNaN(despesa)) {
-        dados.push({ mes, receita, despesa });
-        localStorage.setItem('planejamento', JSON.stringify(dados));
-        atualizarGrafico();
-        form.reset();
-      }
+      dados.push({ mes, receita, despesa });
+      localStorage.setItem('planejamentos', JSON.stringify(dados));
+
+      form.reset();
+      atualizarGrafico();
     });
   </script>
 </body>
