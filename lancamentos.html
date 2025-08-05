@@ -123,6 +123,7 @@
     </div>
 
     <h2>📋 Histórico</h2>
+    <p id="resumoSaldo" style="font-weight: bold;"></p>
     <ul id="listaTransacoes"></ul>
 
     <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
@@ -162,6 +163,11 @@
         .reduce((total, t) => total + Number(t.valor), 0);
       const saidas = transacoes.filter(t => t.tipo === 'saida')
         .reduce((total, t) => total + Number(t.valor), 0);
+
+      document.getElementById("resumoSaldo").innerHTML =
+        `<span style="color:green;">Entradas: ${formatarValor(entradas)}</span> | ` +
+        `<span style="color:red;">Saídas: ${formatarValor(saidas)}</span> | ` +
+        `<strong>Saldo: ${formatarValor(entradas - saidas)}</strong>`;
 
       const ctx = canvas.getContext('2d');
       if (grafico) grafico.destroy();
@@ -210,8 +216,8 @@
         return anoT === ano && mesT === mes;
       });
 
-      atualizarGrafico(filtradas);
       atualizarLista(filtradas);
+      atualizarGrafico(filtradas);
     }
 
     async function gerarPdfDoMes() {
@@ -239,13 +245,20 @@
         return;
       }
 
+      const entradas = filtradas
+        .filter(t => t.tipo === 'entrada')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saidas = filtradas
+        .filter(t => t.tipo === 'saida')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saldo = entradas - saidas;
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.text(`RELATÓRIO DE ${nomeMes.toUpperCase()} DE ${ano}`, 105, 20, null, null, 'center');
-      doc.setLineWidth(0.5);
       doc.line(10, 25, 200, 25);
       doc.setFont('courier', 'normal');
       doc.setFontSize(12);
@@ -267,8 +280,6 @@
         if (y > 280) {
           doc.addPage();
           y = 20;
-          doc.setFont('courier', 'normal');
-          doc.setFontSize(12);
         }
         doc.text(t.data, colDataX, y);
         doc.text(t.tipo.toUpperCase(), colTipoX, y);
@@ -276,6 +287,14 @@
         doc.text(t.descricao, colDescX, y);
         y += 8;
       });
+
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Total de Entradas: ${formatarValor(entradas)}`, 14, y);
+      y += 7;
+      doc.text(`Total de Saídas: ${formatarValor(saidas)}`, 14, y);
+      y += 7;
+      doc.text(`Saldo do Mês: ${formatarValor(saldo)}`, 14, y);
 
       doc.save(`relatorio_${ano}-${mes}.pdf`);
     }
