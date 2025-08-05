@@ -72,6 +72,10 @@
       border-radius: 10px;
       padding: 20px;
     }
+    #saldoDoMes {
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -120,10 +124,11 @@
       <input type="month" id="filtroMes" />
       <button type="button" onclick="filtrarPorMes()">Atualizar Gráfico</button>
       <button type="button" onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
+      <button type="button" onclick="mostrarSaldoMes()">Ver Saldo do Mês</button>
+      <p id="saldoDoMes"></p>
     </div>
 
     <h2>📋 Histórico</h2>
-    <p id="resumoSaldo" style="font-weight: bold;"></p>
     <ul id="listaTransacoes"></ul>
 
     <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
@@ -135,6 +140,7 @@
     const lista = document.getElementById('listaTransacoes');
     const inputFiltroMes = document.getElementById('filtroMes');
     const canvas = document.getElementById('graficoEntradasSaidas');
+    const saldoMesEl = document.getElementById('saldoDoMes');
     let grafico;
 
     function formatarValor(valor) {
@@ -163,11 +169,6 @@
         .reduce((total, t) => total + Number(t.valor), 0);
       const saidas = transacoes.filter(t => t.tipo === 'saida')
         .reduce((total, t) => total + Number(t.valor), 0);
-
-      document.getElementById("resumoSaldo").innerHTML =
-        `<span style="color:green;">Entradas: ${formatarValor(entradas)}</span> | ` +
-        `<span style="color:red;">Saídas: ${formatarValor(saidas)}</span> | ` +
-        `<strong>Saldo: ${formatarValor(entradas - saidas)}</strong>`;
 
       const ctx = canvas.getContext('2d');
       if (grafico) grafico.destroy();
@@ -208,6 +209,8 @@
         return;
       }
 
+      saldoMesEl.textContent = '';
+
       const [ano, mes] = mesSelecionado.split("-");
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
 
@@ -220,83 +223,26 @@
       atualizarGrafico(filtradas);
     }
 
-    async function gerarPdfDoMes() {
+    function mostrarSaldoMes() {
       const mesSelecionado = inputFiltroMes.value;
       if (!mesSelecionado) {
-        alert('Selecione um mês válido!');
+        alert("Selecione um mês primeiro.");
         return;
       }
 
       const [ano, mes] = mesSelecionado.split("-");
-      const mesesPorExtenso = [
-        'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-      ];
-      const nomeMes = mesesPorExtenso[parseInt(mes, 10) - 1];
-
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
       const filtradas = transacoes.filter(t => {
         const [anoT, mesT] = t.data.split('-');
         return anoT === ano && mesT === mes;
       });
 
-      if (filtradas.length === 0) {
-        alert("Nenhuma transação encontrada para este mês.");
-        return;
-      }
-
-      const entradas = filtradas
-        .filter(t => t.tipo === 'entrada')
-        .reduce((total, t) => total + Number(t.valor), 0);
-      const saidas = filtradas
-        .filter(t => t.tipo === 'saida')
-        .reduce((total, t) => total + Number(t.valor), 0);
+      const entradas = filtradas.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
+      const saidas = filtradas.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
       const saldo = entradas - saidas;
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text(`RELATÓRIO DE ${nomeMes.toUpperCase()} DE ${ano}`, 105, 20, null, null, 'center');
-      doc.line(10, 25, 200, 25);
-      doc.setFont('courier', 'normal');
-      doc.setFontSize(12);
-
-      const colDataX = 14;
-      const colTipoX = 45;
-      const colValorX = 95;
-      const colDescX = 130;
-      let y = 35;
-
-      doc.text('Data', colDataX, y);
-      doc.text('Tipo', colTipoX, y);
-      doc.text('Valor', colValorX, y);
-      doc.text('Descrição', colDescX, y);
-      y += 8;
-      doc.line(10, y - 4, 200, y - 4);
-
-      filtradas.forEach(t => {
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.text(t.data, colDataX, y);
-        doc.text(t.tipo.toUpperCase(), colTipoX, y);
-        doc.text(formatarValor(Number(t.valor)), colValorX, y);
-        doc.text(t.descricao, colDescX, y);
-        y += 8;
-      });
-
-      y += 10;
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Total de Entradas: ${formatarValor(entradas)}`, 14, y);
-      y += 7;
-      doc.text(`Total de Saídas: ${formatarValor(saidas)}`, 14, y);
-      y += 7;
-      doc.text(`Saldo do Mês: ${formatarValor(saldo)}`, 14, y);
-
-      doc.save(`relatorio_${ano}-${mes}.pdf`);
+      saldoMesEl.textContent = `Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)})`;
     }
 
     form.addEventListener('submit', (e) => {
