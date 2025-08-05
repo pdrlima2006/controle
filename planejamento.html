@@ -62,7 +62,8 @@
       height: 42px;
     }
 
-    #botaoMostrarGrafico {
+    #botaoMostrarGrafico,
+    #botaoMostrarSaldo {
       display: none;
       margin-top: 20px;
       padding: 10px;
@@ -83,6 +84,12 @@
       margin-top: 20px;
       font-size: 1.2rem;
       font-weight: bold;
+    }
+
+    #resultadoSaldo {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 1.1rem;
     }
 
     a {
@@ -130,6 +137,9 @@
     <a href="dashboard.html">← Voltar ao Painel</a>
 
     <button id="botaoMostrarGrafico" onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
+    <button id="botaoMostrarSaldo" onclick="mostrarSaldo()">📈 Ver Saldo do Mês</button>
+
+    <p id="resultadoSaldo"></p>
 
     <div id="graficoContainer">
       <div id="tituloMes"></div>
@@ -145,6 +155,8 @@
     const tituloMes = document.getElementById('tituloMes');
     const ctx = document.getElementById('graficoPizza').getContext('2d');
     const botaoMostrarGrafico = document.getElementById('botaoMostrarGrafico');
+    const botaoMostrarSaldo = document.getElementById('botaoMostrarSaldo');
+    const resultadoSaldo = document.getElementById('resultadoSaldo');
     let grafico;
 
     function formatarMoeda(input) {
@@ -200,6 +212,21 @@
       }
     }
 
+    function mostrarSaldo() {
+      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
+      if (!salvo) {
+        resultadoSaldo.textContent = "Nenhum dado salvo para calcular o saldo.";
+        return;
+      }
+
+      const saldo = salvo.receitas - salvo.despesas;
+      const textoSaldo = saldo >= 0
+        ? `📈 Saldo positivo de ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+        : `📉 Saldo negativo de ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+
+      resultadoSaldo.textContent = textoSaldo;
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -221,7 +248,9 @@
       localStorage.setItem('planejamentoMensal', JSON.stringify(dados));
 
       botaoMostrarGrafico.style.display = 'block';
+      botaoMostrarSaldo.style.display = 'block';
       graficoContainer.style.display = 'none';
+      resultadoSaldo.textContent = '';
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -238,6 +267,7 @@
         });
 
         botaoMostrarGrafico.style.display = 'block';
+        botaoMostrarSaldo.style.display = 'block';
       }
     });
   </script>
