@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📅 Planejamento Mensal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -52,26 +53,15 @@
       border-radius: 4px;
     }
 
-    form#planejamentoForm button[type="submit"] {
+    form#planejamentoForm button[type="submit"],
+    button {
       padding: 10px 16px;
       background-color: #003366;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      height: 42px;
-    }
-
-    #botaoMostrarGrafico,
-    #botaoMostrarSaldo {
-      display: none;
-      margin-top: 20px;
-      padding: 10px;
-      background: #003366;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      margin-top: 10px;
     }
 
     #graficoContainer {
@@ -90,6 +80,27 @@
       margin-top: 15px;
       font-weight: bold;
       font-size: 1.1rem;
+    }
+
+    #historico {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 40px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    #historico h3 {
+      margin-bottom: 10px;
+    }
+
+    #historico ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    #historico li {
+      margin-bottom: 8px;
     }
 
     a {
@@ -136,14 +147,20 @@
 
     <a href="dashboard.html">← Voltar ao Painel</a>
 
-    <button id="botaoMostrarGrafico" onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
-    <button id="botaoMostrarSaldo" onclick="mostrarSaldo()">📈 Ver Saldo do Mês</button>
+    <button onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
+    <button onclick="mostrarSaldo()">📈 Ver Saldo do Mês</button>
+    <button onclick="gerarPDF()">📄 Gerar PDF do Mês</button>
 
     <p id="resultadoSaldo"></p>
 
     <div id="graficoContainer">
       <div id="tituloMes"></div>
       <canvas id="graficoPizza"></canvas>
+    </div>
+
+    <div id="historico">
+      <h3>📚 Histórico de Planejamentos</h3>
+      <ul id="listaHistorico"></ul>
     </div>
   </main>
 
@@ -153,10 +170,9 @@
     const form = document.getElementById('planejamentoForm');
     const graficoContainer = document.getElementById('graficoContainer');
     const tituloMes = document.getElementById('tituloMes');
-    const ctx = document.getElementById('graficoPizza').getContext('2d');
-    const botaoMostrarGrafico = document.getElementById('botaoMostrarGrafico');
-    const botaoMostrarSaldo = document.getElementById('botaoMostrarSaldo');
     const resultadoSaldo = document.getElementById('resultadoSaldo');
+    const listaHistorico = document.getElementById('listaHistorico');
+    const ctx = document.getElementById('graficoPizza').getContext('2d');
     let grafico;
 
     function formatarMoeda(input) {
@@ -172,32 +188,31 @@
       input.addEventListener("input", () => formatarMoeda(input));
     });
 
-    function exibirGrafico(mesInput, receitas, despesas) {
-      const [ano, mes] = mesInput.split("-");
+    function mostrarGrafico() {
+      const salvo = getUltimoPlanejamento();
+      if (!salvo) return;
+      const [ano, mes] = salvo.mes.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
 
       tituloMes.textContent = `Planejamento de ${nomeMes} de ${ano}`;
-
       if (grafico) grafico.destroy();
 
       grafico = new Chart(ctx, {
         type: 'pie',
         data: {
           labels: [
-            `Receitas: R$ ${receitas.toFixed(2).replace('.', ',')}`,
-            `Despesas: R$ ${despesas.toFixed(2).replace('.', ',')}`
+            `Receitas: R$ ${salvo.receitas.toFixed(2).replace('.', ',')}`,
+            `Despesas: R$ ${salvo.despesas.toFixed(2).replace('.', ',')}`
           ],
           datasets: [{
-            data: [receitas, despesas],
+            data: [salvo.receitas, salvo.despesas],
             backgroundColor: ['#4CAF50', '#F44336']
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              position: 'bottom'
-            }
+            legend: { position: 'bottom' }
           }
         }
       });
@@ -205,71 +220,78 @@
       graficoContainer.style.display = 'block';
     }
 
-    function mostrarGrafico() {
-      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
-      if (salvo) {
-        exibirGrafico(salvo.mes, salvo.receitas, salvo.despesas);
-      }
-    }
-
     function mostrarSaldo() {
-      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
-      if (!salvo) {
-        resultadoSaldo.textContent = "Nenhum dado salvo para calcular o saldo.";
-        return;
-      }
+      const salvo = getUltimoPlanejamento();
+      if (!salvo) return;
 
       const saldo = salvo.receitas - salvo.despesas;
-      const textoSaldo = saldo >= 0
-        ? `📈 Saldo positivo de ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
-        : `📉 Saldo negativo de ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
-
-      resultadoSaldo.textContent = textoSaldo;
+      const texto = saldo >= 0
+        ? `✅ Saldo positivo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+        : `⚠️ Saldo negativo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+      resultadoSaldo.textContent = texto;
     }
 
-    form.addEventListener('submit', function (e) {
+    function gerarPDF() {
+      const salvo = getUltimoPlanejamento();
+      if (!salvo) return;
+
+      const [ano, mes] = salvo.mes.split("-");
+      const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
+      const saldo = salvo.receitas - salvo.despesas;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text(`Planejamento de ${nomeMes.toUpperCase()} de ${ano}`, 20, 20);
+      doc.setFontSize(12);
+      doc.text(`Mês: ${nomeMes}/${ano}`, 20, 40);
+      doc.text(`Previsão de Receitas: ${salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 50);
+      doc.text(`Previsão de Despesas: ${salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 60);
+      doc.text(`Saldo do Mês: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 70);
+      doc.save(`planejamento_${nomeMes.toLowerCase()}-${ano}.pdf`);
+    }
+
+    function getUltimoPlanejamento() {
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      return historico.length ? historico[historico.length - 1] : null;
+    }
+
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
 
       const mesInput = form.elements['mes'].value;
-      const receitasStr = receitasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
-      const despesasStr = despesasInput.value.replace(/[^\d,-]/g, "").replace(",", ".");
-
-      const receitas = parseFloat(receitasStr);
-      const despesas = parseFloat(despesasStr);
+      const receitas = parseFloat(receitasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
+      const despesas = parseFloat(despesasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
 
       if (!mesInput || isNaN(receitas) || isNaN(despesas)) return;
 
-      const dados = {
-        mes: mesInput,
-        receitas: receitas,
-        despesas: despesas
-      };
+      const novo = { mes: mesInput, receitas, despesas };
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      historico.push(novo);
+      localStorage.setItem('planejamentos', JSON.stringify(historico));
 
-      localStorage.setItem('planejamentoMensal', JSON.stringify(dados));
-
-      botaoMostrarGrafico.style.display = 'block';
-      botaoMostrarSaldo.style.display = 'block';
-      graficoContainer.style.display = 'none';
-      resultadoSaldo.textContent = '';
+      mostrarGrafico();
+      mostrarSaldo();
+      atualizarHistorico();
+      form.reset();
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const salvo = JSON.parse(localStorage.getItem('planejamentoMensal'));
-      if (salvo) {
-        form.elements['mes'].value = salvo.mes;
-        receitasInput.value = salvo.receitas.toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        });
-        despesasInput.value = salvo.despesas.toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        });
+    function atualizarHistorico() {
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      listaHistorico.innerHTML = "";
 
-        botaoMostrarGrafico.style.display = 'block';
-        botaoMostrarSaldo.style.display = 'block';
-      }
-    });
+      historico.forEach((item) => {
+        const [ano, mes] = item.mes.split("-");
+        const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
+        const saldo = item.receitas - item.despesas;
+
+        const li = document.createElement("li");
+        li.textContent = `${nomeMes}/${ano} - Receitas: ${item.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}, Despesas: ${item.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}, Saldo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+        listaHistorico.appendChild(li);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', atualizarHistorico);
   </script>
 </body>
 </html>
