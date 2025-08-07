@@ -4,182 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📅 Planejamento Mensal</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 0 20px;
-    }
-    header {
-      background-color: #003366;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px 0;
-    }
-    form#planejamentoForm {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 20px;
-      align-items: flex-end;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      min-width: 200px;
-      flex: 1;
-    }
-    .form-group label {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .form-group input {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    form#planejamentoForm button[type="submit"],
-    button {
-      padding: 10px 16px;
-      background-color: #003366;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    #graficoContainer {
-      display: none;
-      margin-top: 30px;
-      max-width: 600px;
-    }
-    #tituloMes {
-      margin-top: 20px;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-    #resultadoSaldo {
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-    #historico {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 40px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    #historico h3 {
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px 10px;
-      text-align: center;
-    }
-    th {
-      background-color: #003366;
-      color: white;
-    }
-    a {
-      display: inline-block;
-      margin-top: 20px;
-      color: #003366;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    @media (max-width: 600px) {
-      form#planejamentoForm {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .form-group,
-      form#planejamentoForm button {
-        width: 100%;
-      }
-    }
-  </style>
 </head>
 <body>
-  <header>
-    <h1>📅 Planejamento Mensal</h1>
-  </header>
-  <main>
-    <form id="planejamentoForm">
-      <div class="form-group">
-        <label for="mes">Mês:</label>
-        <input type="month" name="mes" id="mes" required />
-      </div>
-      <div class="form-group">
-        <label for="receitas">Previsão de Receitas:</label>
-        <input type="text" name="receitas" id="receitas" required />
-      </div>
-      <div class="form-group">
-        <label for="despesas">Previsão de Despesas:</label>
-        <input type="text" name="despesas" id="despesas" required />
-      </div>
-      <button type="submit">Salvar</button>
-    </form>
+  <h1>📅 Planejamento Mensal</h1>
 
-    <a href="dashboard.html">← Voltar ao Painel</a>
+  <form id="planejamentoForm">
+    <label for="mes">Mês:</label>
+    <input type="month" name="mes" required />
 
-    <button onclick="mostrarGrafico()">📊 Ver Gráfico do Planejamento</button>
-    <button onclick="mostrarSaldo()">📈 Ver Saldo do Mês</button>
-    <button onclick="gerarPDF()">📄 Gerar PDF do Mês</button>
+    <label for="receitas">Previsão de Receitas:</label>
+    <input type="text" id="receitas" required />
 
+    <label for="despesas">Previsão de Despesas:</label>
+    <input type="text" id="despesas" required />
+
+    <button type="submit">Salvar</button>
+  </form>
+
+  <div id="graficoContainer">
+    <h2 id="tituloMes">Gráfico de Planejamento</h2>
+    <canvas id="graficoPizza"></canvas>
     <p id="resultadoSaldo"></p>
+  </div>
 
-    <div id="graficoContainer">
-      <div id="tituloMes"></div>
-      <canvas id="graficoPizza"></canvas>
-    </div>
-
-    <div id="historico">
-      <h3>📚 Histórico de Planejamentos</h3>
-      <table id="tabelaHistorico">
-        <thead>
-          <tr>
-            <th>Mês/Ano</th>
-            <th>Receitas</th>
-            <th>Despesas</th>
-            <th>Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Linhas do histórico serão inseridas aqui -->
-        </tbody>
-      </table>
-    </div>
-  </main>
+  <div>
+    <h2>📊 Histórico de Planejamento</h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Mês</th>
+          <th>Receitas</th>
+          <th>Despesas</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaHistorico"></tbody>
+    </table>
+  </div>
 
   <script>
-    const receitasInput = document.getElementById('receitas');
-    const despesasInput = document.getElementById('despesas');
-    const form = document.getElementById('planejamentoForm');
-    const graficoContainer = document.getElementById('graficoContainer');
-    const tituloMes = document.getElementById('tituloMes');
-    const resultadoSaldo = document.getElementById('resultadoSaldo');
-    const tabelaHistorico = document.querySelector('#tabelaHistorico tbody');
-    const ctx = document.getElementById('graficoPizza').getContext('2d');
+    const receitasInput = document.getElementById("receitas");
+    const despesasInput = document.getElementById("despesas");
+    const form = document.getElementById("planejamentoForm");
+    const graficoContainer = document.getElementById("graficoContainer");
+    const tituloMes = document.getElementById("tituloMes");
+    const resultadoSaldo = document.getElementById("resultadoSaldo");
+    const tabelaHistorico = document.querySelector("#tabelaHistorico");
+    const ctx = document.getElementById("graficoPizza").getContext("2d");
     let grafico;
 
-    // Formatar moeda brasileira ao digitar
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
       if (valor === "") {
@@ -197,161 +72,85 @@
       input.addEventListener("input", () => formatarMoeda(input));
     });
 
-    function mostrarGrafico() {
-      const salvo = getUltimoPlanejamento();
-      if (!salvo) {
-        alert("Nenhum planejamento salvo.");
+    function moedaParaNumero(valor) {
+      if (!valor) return 0;
+      return parseFloat(
+        valor.replace(/\s/g, "").replace("R$", "").replace(/\./g, "").replace(",", ".")
+      ) || 0;
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const mes = form.elements["mes"].value;
+      const receitas = moedaParaNumero(receitasInput.value);
+      const despesas = moedaParaNumero(despesasInput.value);
+
+      if (!mes || isNaN(receitas) || isNaN(despesas)) {
+        alert("Preencha todos os campos corretamente.");
         return;
       }
 
-      const [ano, mes] = salvo.mes.split("-");
-      const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
+      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
+      historico.push({ mes, receitas, despesas });
+      localStorage.setItem("planejamentos", JSON.stringify(historico));
 
-      tituloMes.textContent = `Planejamento de ${nomeMes} de ${ano}`;
-      if (grafico) grafico.destroy();
+      atualizarHistorico();
+      mostrarGrafico(mes, receitas, despesas);
+      mostrarSaldo(receitas - despesas);
 
-      grafico = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: [
-            `Receitas: ${salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-            `Despesas: ${salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
-          ],
-          datasets: [{
-            data: [salvo.receitas, salvo.despesas],
-            backgroundColor: ['#4CAF50', '#F44336']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
-      });
-
-      graficoContainer.style.display = 'block';
-    }
-
-    function mostrarSaldo() {
-      const salvo = getUltimoPlanejamento();
-      if (!salvo) {
-        alert("Nenhum planejamento salvo.");
-        return;
-      }
-
-      const saldo = salvo.receitas - salvo.despesas;
-      const texto = saldo >= 0
-        ? `✅ Saldo positivo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
-        : `⚠️ Saldo negativo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
-      resultadoSaldo.textContent = texto;
-    }
-
-    function gerarPDF() {
-      const salvo = getUltimoPlanejamento();
-      if (!salvo) {
-        alert("Nenhum planejamento salvo.");
-        return;
-      }
-
-      const [ano, mes] = salvo.mes.split("-");
-      const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
-      const saldo = salvo.receitas - salvo.despesas;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      // Cabeçalho
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text(`RELATÓRIO DE PLANEJAMENTO - ${nomeMes.toUpperCase()} DE ${ano}`, 14, 20);
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.line(14, 25, 196, 25);
-
-      // Tabela cabeçalho
-      doc.setFontSize(12);
-      doc.text("Mês", 14, 40);
-      doc.text("Receitas", 60, 40);
-      doc.text("Despesas", 110, 40);
-      doc.text("Saldo", 160, 40);
-
-      doc.setFont("helvetica", "normal");
-
-      // Conteúdo
-      const receitaFmt = salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const despesaFmt = salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const saldoFmt = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-      doc.text(`${nomeMes}/${ano}`, 14, 50);
-      doc.text(receitaFmt, 60, 50);
-      doc.text(despesaFmt, 110, 50);
-      doc.text(saldoFmt, 160, 50);
-
-      doc.save(`planejamento_${nomeMes.toLowerCase()}_${ano}.pdf`);
-    }
-
-    function getUltimoPlanejamento() {
-      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-      return historico.length ? historico[historico.length - 1] : null;
-    }
+      form.reset();
+    });
 
     function atualizarHistorico() {
-      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
       tabelaHistorico.innerHTML = "";
 
-      historico.forEach((item) => {
-        const [ano, mes] = item.mes.split("-");
-        const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
-        const saldo = item.receitas - item.despesas;
+      historico.forEach(({ mes, receitas, despesas }) => {
+        const [ano, mesNum] = mes.split("-");
+        const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
+
+        const saldo = receitas - despesas;
 
         const tr = document.createElement("tr");
-
-        const tdMes = document.createElement("td");
-        tdMes.textContent = `${nomeMes}/${ano}`;
-        tr.appendChild(tdMes);
-
-        const tdReceitas = document.createElement("td");
-        tdReceitas.textContent = item.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-        tr.appendChild(tdReceitas);
-
-        const tdDespesas = document.createElement("td");
-        tdDespesas.textContent = item.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-        tr.appendChild(tdDespesas);
-
-        const tdSaldo = document.createElement("td");
-        tdSaldo.textContent = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-        tr.appendChild(tdSaldo);
-
+        tr.innerHTML = `
+          <td>${nomeMes}/${ano}</td>
+          <td>${receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+          <td>${despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+          <td>${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+        `;
         tabelaHistorico.appendChild(tr);
       });
     }
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
+    function mostrarGrafico(mes, receitas, despesas) {
+      const [ano, mesNum] = mes.split("-");
+      const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
+      tituloMes.textContent = `Gráfico de ${nomeMes}/${ano}`;
 
-      const mesInput = form.elements['mes'].value;
-      const receitas = parseFloat(receitasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
-      const despesas = parseFloat(despesasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
+      if (grafico) grafico.destroy();
 
-      if (!mesInput || isNaN(receitas) || isNaN(despesas)) {
-        alert("Por favor, preencha todos os campos corretamente.");
-        return;
-      }
+      grafico = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Receitas", "Despesas"],
+          datasets: [{
+            data: [receitas, despesas],
+            backgroundColor: ["#4CAF50", "#F44336"],
+          }],
+        },
+      });
+    }
 
-      const novo = { mes: mesInput, receitas, despesas };
-      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-      historico.push(novo);
-      localStorage.setItem('planejamentos', JSON.stringify(historico));
+    function mostrarSaldo(saldo) {
+      resultadoSaldo.textContent = `Saldo: ${saldo.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })}`;
+      resultadoSaldo.style.color = saldo >= 0 ? "green" : "red";
+    }
 
-      atualizarHistorico();
-      mostrarGrafico();
-      mostrarSaldo();
-      form.reset();
-    });
-
-    // Atualiza histórico ao carregar a página
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener("DOMContentLoaded", () => {
       atualizarHistorico();
     });
   </script>
