@@ -245,38 +245,29 @@
       saldoMesEl.textContent = `Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)})`;
     }
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const tipo = form.tipo.value;
-      const valor = parseFloat(form.valor.value);
-      const descricao = form.descricao.value;
-      const data = form.data.value;
-      const nova = { tipo, valor, descricao, data };
-
-      const arquivo = form.notaFiscal.files[0];
-      if (arquivo) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          nova.notaFiscalBase64 = reader.result;
-          nova.notaFiscalNome = arquivo.name;
-          salvarTransacao(nova);
-        };
-        reader.readAsDataURL(arquivo);
-      } else {
-        salvarTransacao(nova);
+    async function gerarPdfDoMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert("Selecione um mês primeiro.");
+        return;
       }
-    });
 
-    function salvarTransacao(nova) {
+      const [ano, mes] = mesSelecionado.split("-");
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      transacoes.push(nova);
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      form.reset();
-      carregarDados();
-    }
 
-    document.addEventListener('DOMContentLoaded', carregarDados);
-  </script>
-</body>
-</html>
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text(`💸 Transações do mês ${mes}/${ano}`, 14, 20);
+
+      let y = 35;
+      filtradas.forEach(t => {
+        doc.setFontSize(12);
+        doc.text(`• ${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`, 14, y);
+        y += 8;
