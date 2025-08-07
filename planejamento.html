@@ -13,20 +13,17 @@
       margin: 0;
       padding: 0 20px;
     }
-
     header {
       background-color: #003366;
       color: white;
       padding: 20px;
       text-align: center;
     }
-
     main {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 20px 0;
     }
-
     form#planejamentoForm {
       display: flex;
       flex-wrap: wrap;
@@ -34,25 +31,21 @@
       margin-bottom: 20px;
       align-items: flex-end;
     }
-
     .form-group {
       display: flex;
       flex-direction: column;
       min-width: 200px;
       flex: 1;
     }
-
     .form-group label {
       font-weight: bold;
       margin-bottom: 5px;
     }
-
     .form-group input {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-
     form#planejamentoForm button[type="submit"],
     button {
       padding: 10px 16px;
@@ -63,49 +56,47 @@
       cursor: pointer;
       margin-top: 10px;
     }
-
     #graficoContainer {
       display: none;
       margin-top: 30px;
-      max-width: 500px;
+      max-width: 600px;
     }
-
     #tituloMes {
       margin-top: 20px;
       font-size: 1.2rem;
       font-weight: bold;
     }
-
     #resultadoSaldo {
       margin-top: 15px;
       font-weight: bold;
       font-size: 1.1rem;
     }
-
     #historico {
       background: white;
       padding: 20px;
       border-radius: 10px;
       margin-top: 40px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      max-height: 300px;
+      max-height: 400px;
       overflow-y: auto;
     }
-
     #historico h3 {
       margin-bottom: 10px;
     }
-
-    #historico ul {
-      list-style: none;
-      padding-left: 0;
-      margin: 0;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
     }
-
-    #historico li {
-      margin-bottom: 8px;
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
     }
-
+    th {
+      background-color: #003366;
+      color: white;
+    }
     a {
       display: inline-block;
       margin-top: 20px;
@@ -113,13 +104,11 @@
       text-decoration: none;
       font-weight: bold;
     }
-
     @media (max-width: 600px) {
       form#planejamentoForm {
         flex-direction: column;
         align-items: stretch;
       }
-
       .form-group,
       form#planejamentoForm button {
         width: 100%;
@@ -163,7 +152,19 @@
 
     <div id="historico">
       <h3>📚 Histórico de Planejamentos</h3>
-      <ul id="listaHistorico"></ul>
+      <table id="tabelaHistorico">
+        <thead>
+          <tr>
+            <th>Mês/Ano</th>
+            <th>Receitas</th>
+            <th>Despesas</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Linhas do histórico serão inseridas aqui -->
+        </tbody>
+      </table>
     </div>
   </main>
 
@@ -174,13 +175,17 @@
     const graficoContainer = document.getElementById('graficoContainer');
     const tituloMes = document.getElementById('tituloMes');
     const resultadoSaldo = document.getElementById('resultadoSaldo');
-    const listaHistorico = document.getElementById('listaHistorico');
+    const tabelaHistorico = document.querySelector('#tabelaHistorico tbody');
     const ctx = document.getElementById('graficoPizza').getContext('2d');
     let grafico;
 
     // Formatar moeda brasileira ao digitar
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
+      if (valor === "") {
+        input.value = "";
+        return;
+      }
       valor = (parseInt(valor) / 100).toFixed(2);
       input.value = parseFloat(valor).toLocaleString("pt-BR", {
         style: "currency",
@@ -194,7 +199,10 @@
 
     function mostrarGrafico() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return alert("Nenhum planejamento salvo.");
+      if (!salvo) {
+        alert("Nenhum planejamento salvo.");
+        return;
+      }
 
       const [ano, mes] = salvo.mes.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
@@ -227,7 +235,10 @@
 
     function mostrarSaldo() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return alert("Nenhum planejamento salvo.");
+      if (!salvo) {
+        alert("Nenhum planejamento salvo.");
+        return;
+      }
 
       const saldo = salvo.receitas - salvo.despesas;
       const texto = saldo >= 0
@@ -238,7 +249,10 @@
 
     function gerarPDF() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return alert("Nenhum planejamento salvo.");
+      if (!salvo) {
+        alert("Nenhum planejamento salvo.");
+        return;
+      }
 
       const [ano, mes] = salvo.mes.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
@@ -282,6 +296,37 @@
       return historico.length ? historico[historico.length - 1] : null;
     }
 
+    function atualizarHistorico() {
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      tabelaHistorico.innerHTML = "";
+
+      historico.forEach((item) => {
+        const [ano, mes] = item.mes.split("-");
+        const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
+        const saldo = item.receitas - item.despesas;
+
+        const tr = document.createElement("tr");
+
+        const tdMes = document.createElement("td");
+        tdMes.textContent = `${nomeMes}/${ano}`;
+        tr.appendChild(tdMes);
+
+        const tdReceitas = document.createElement("td");
+        tdReceitas.textContent = item.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        tr.appendChild(tdReceitas);
+
+        const tdDespesas = document.createElement("td");
+        tdDespesas.textContent = item.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        tr.appendChild(tdDespesas);
+
+        const tdSaldo = document.createElement("td");
+        tdSaldo.textContent = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        tr.appendChild(tdSaldo);
+
+        tabelaHistorico.appendChild(tr);
+      });
+    }
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -304,21 +349,6 @@
       mostrarSaldo();
       form.reset();
     });
-
-    function atualizarHistorico() {
-      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-      listaHistorico.innerHTML = "";
-
-      historico.forEach((item) => {
-        const [ano, mes] = item.mes.split("-");
-        const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
-        const saldo = item.receitas - item.despesas;
-
-        const li = document.createElement("li");
-        li.textContent = `${nomeMes}/${ano} - Receitas: ${item.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}, Despesas: ${item.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}, Saldo: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
-        listaHistorico.appendChild(li);
-      });
-    }
 
     // Atualiza histórico ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
