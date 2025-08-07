@@ -88,6 +88,8 @@
       border-radius: 10px;
       margin-top: 40px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-height: 300px;
+      overflow-y: auto;
     }
 
     #historico h3 {
@@ -97,6 +99,7 @@
     #historico ul {
       list-style: none;
       padding-left: 0;
+      margin: 0;
     }
 
     #historico li {
@@ -175,6 +178,7 @@
     const ctx = document.getElementById('graficoPizza').getContext('2d');
     let grafico;
 
+    // Formatar moeda brasileira ao digitar
     function formatarMoeda(input) {
       let valor = input.value.replace(/\D/g, "");
       valor = (parseInt(valor) / 100).toFixed(2);
@@ -190,7 +194,8 @@
 
     function mostrarGrafico() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return;
+      if (!salvo) return alert("Nenhum planejamento salvo.");
+
       const [ano, mes] = salvo.mes.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
 
@@ -201,8 +206,8 @@
         type: 'pie',
         data: {
           labels: [
-            `Receitas: R$ ${salvo.receitas.toFixed(2).replace('.', ',')}`,
-            `Despesas: R$ ${salvo.despesas.toFixed(2).replace('.', ',')}`
+            `Receitas: ${salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+            `Despesas: ${salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
           ],
           datasets: [{
             data: [salvo.receitas, salvo.despesas],
@@ -222,7 +227,7 @@
 
     function mostrarSaldo() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return;
+      if (!salvo) return alert("Nenhum planejamento salvo.");
 
       const saldo = salvo.receitas - salvo.despesas;
       const texto = saldo >= 0
@@ -233,7 +238,7 @@
 
     function gerarPDF() {
       const salvo = getUltimoPlanejamento();
-      if (!salvo) return;
+      if (!salvo) return alert("Nenhum planejamento salvo.");
 
       const [ano, mes] = salvo.mes.split("-");
       const nomeMes = new Date(`${mes}/01/${ano}`).toLocaleString('pt-BR', { month: 'long' });
@@ -241,14 +246,35 @@
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
+
+      // Cabeçalho
       doc.setFontSize(16);
-      doc.text(`Planejamento de ${nomeMes.toUpperCase()} de ${ano}`, 20, 20);
+      doc.setFont("helvetica", "bold");
+      doc.text(`RELATÓRIO DE PLANEJAMENTO - ${nomeMes.toUpperCase()} DE ${ano}`, 14, 20);
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.line(14, 25, 196, 25);
+
+      // Tabela cabeçalho
       doc.setFontSize(12);
-      doc.text(`Mês: ${nomeMes}/${ano}`, 20, 40);
-      doc.text(`Previsão de Receitas: ${salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 50);
-      doc.text(`Previsão de Despesas: ${salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 60);
-      doc.text(`Saldo do Mês: ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`, 20, 70);
-      doc.save(`planejamento_${nomeMes.toLowerCase()}-${ano}.pdf`);
+      doc.text("Mês", 14, 40);
+      doc.text("Receitas", 60, 40);
+      doc.text("Despesas", 110, 40);
+      doc.text("Saldo", 160, 40);
+
+      doc.setFont("helvetica", "normal");
+
+      // Conteúdo
+      const receitaFmt = salvo.receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const despesaFmt = salvo.despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const saldoFmt = saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      doc.text(`${nomeMes}/${ano}`, 14, 50);
+      doc.text(receitaFmt, 60, 50);
+      doc.text(despesaFmt, 110, 50);
+      doc.text(saldoFmt, 160, 50);
+
+      doc.save(`planejamento_${nomeMes.toLowerCase()}_${ano}.pdf`);
     }
 
     function getUltimoPlanejamento() {
@@ -263,16 +289,19 @@
       const receitas = parseFloat(receitasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
       const despesas = parseFloat(despesasInput.value.replace(/[^\d,-]/g, "").replace(",", "."));
 
-      if (!mesInput || isNaN(receitas) || isNaN(despesas)) return;
+      if (!mesInput || isNaN(receitas) || isNaN(despesas)) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
+      }
 
       const novo = { mes: mesInput, receitas, despesas };
       const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
       historico.push(novo);
       localStorage.setItem('planejamentos', JSON.stringify(historico));
 
+      atualizarHistorico();
       mostrarGrafico();
       mostrarSaldo();
-      atualizarHistorico();
       form.reset();
     });
 
@@ -291,7 +320,10 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', atualizarHistorico);
+    // Atualiza histórico ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      atualizarHistorico();
+    });
   </script>
 </body>
 </html>
