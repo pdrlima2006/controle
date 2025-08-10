@@ -50,6 +50,11 @@
       cursor: pointer;
       margin-top: 20px;
     }
+    button.deletar {
+      background: #d32f2f;
+      margin-top: 10px;
+      margin-right: 10px;
+    }
     a {
       display: inline-block;
       margin-top: 10px;
@@ -62,9 +67,16 @@
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      list-style: none;
     }
     li {
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    li label {
+      flex-grow: 1;
+      cursor: pointer;
     }
     canvas {
       margin-top: 30px;
@@ -74,6 +86,9 @@
     }
     #saldoDoMes {
       font-weight: bold;
+      margin-top: 10px;
+    }
+    .acoes-deletar {
       margin-top: 10px;
     }
   </style>
@@ -129,6 +144,12 @@
     </div>
 
     <h2>📋 Histórico</h2>
+    
+    <div class="acoes-deletar">
+      <button class="deletar" onclick="deletarSelecionados()">Deletar Selecionados</button>
+      <button class="deletar" onclick="deletarTodos()">Deletar Tudo</button>
+    </div>
+
     <ul id="listaTransacoes"></ul>
 
     <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
@@ -149,17 +170,29 @@
 
     function atualizarLista(transacoes) {
       lista.innerHTML = '';
-      transacoes.forEach((t) => {
+      transacoes.forEach((t, index) => {
         const li = document.createElement('li');
-        li.textContent = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.index = index;
+        checkbox.id = `transacao-${index}`;
+
+        const label = document.createElement('label');
+        label.htmlFor = `transacao-${index}`;
+        label.innerHTML = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
         if (t.notaFiscalNome) {
           const link = document.createElement('a');
           link.href = t.notaFiscalBase64;
           link.download = t.notaFiscalNome;
           link.textContent = ' 📎 Ver Nota Fiscal';
           link.style.marginLeft = '10px';
-          li.appendChild(link);
+          label.appendChild(link);
         }
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+
         lista.appendChild(li);
       });
     }
@@ -200,6 +233,8 @@
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
       atualizarLista(transacoes);
       atualizarGrafico(transacoes);
+      saldoMesEl.textContent = '';
+      inputFiltroMes.value = '';
     }
 
     function filtrarPorMes() {
@@ -245,7 +280,6 @@
       saldoMesEl.textContent = `Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)})`;
     }
 
-    // Função para gerar PDF do mês selecionado
     function nomeMesPorExtenso(mes) {
       const meses = [
         "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
@@ -286,20 +320,16 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Cabeçalho
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       const titulo = `RELATÓRIO DO MÊS DE ${nomeMesPorExtenso(mes)} DE ${ano}`;
       doc.text(titulo, 14, 20);
 
-      // Linha horizontal abaixo do título
       doc.setLineWidth(0.5);
       doc.line(14, 24, 196, 24);
 
-      // Espaço inicial para tabela
       let y = 32;
 
-      // Cabeçalho tabela
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text("DATA", 14, y);
@@ -309,9 +339,8 @@
       y += 8;
       doc.setFont("helvetica", "normal");
 
-      // Conteúdo tabela
       filtradas.forEach((t) => {
-        if (y > 280) { // nova página
+        if (y > 280) {
           doc.addPage();
           y = 20;
         }
@@ -322,7 +351,6 @@
         y += 8;
       });
 
-      // Linha horizontal antes do saldo
       if (y > 280) {
         doc.addPage();
         y = 20;
@@ -332,7 +360,6 @@
       doc.line(14, y, 196, y);
       y += 8;
 
-      // Saldo final
       doc.setFont("helvetica", "bold");
       doc.text(`ENTRADAS: ${formatarValor(entradas)}`, 14, y);
       y += 8;
@@ -340,7 +367,6 @@
       y += 8;
       doc.text(`SALDO DO MÊS: ${formatarValor(saldo)}`, 14, y);
 
-      // Salvar PDF
       doc.save(`relatorio_${ano}-${mes}.pdf`);
     }
 
@@ -372,6 +398,31 @@
       transacoes.push(nova);
       localStorage.setItem('transacoes', JSON.stringify(transacoes));
       form.reset();
+      carregarDados();
+    }
+
+    function deletarSelecionados() {
+      const checkboxes = lista.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert('Selecione ao menos um item para deletar.');
+        return;
+      }
+
+      let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      // Pega os índices selecionados, ordena em ordem decrescente para remover sem erro
+      const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+
+      indices.forEach(i => {
+        transacoes.splice(i, 1);
+      });
+
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      carregarDados();
+    }
+
+    function deletarTodos() {
+      if (!confirm('Tem certeza que deseja deletar TODAS as transações?')) return;
+      localStorage.removeItem('transacoes');
       carregarDados();
     }
 
