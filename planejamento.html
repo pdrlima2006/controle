@@ -83,27 +83,16 @@
     button.deletar:hover {
       background-color: #b00000;
     }
-    .btn-group {
-      margin-bottom: 15px;
-    }
-    .btn-group button {
-      margin-right: 10px;
-      margin-top: 0;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      overflow-x: auto;
-      display: block;
-      max-width: 100%;
     }
     th, td {
       border: 1px solid #ddd;
       padding: 8px 12px;
       text-align: center;
       vertical-align: middle;
-      white-space: nowrap;
     }
     th {
       background-color: #003366;
@@ -228,7 +217,6 @@
     const ctx = document.getElementById("graficoPizza").getContext("2d");
     let grafico = null;
 
-    // Formatar moeda no input em tempo real
     function formatarMoeda(event) {
       let input = event.target;
       let valor = input.value;
@@ -284,7 +272,6 @@
       atualizarHistorico();
       form.reset();
 
-      // Esconder gráfico até filtrar
       graficoContainer.style.display = 'none';
       resultadoSaldo.textContent = '';
       detalhesSaldo.textContent = '';
@@ -368,8 +355,13 @@
         alert('Selecione um mês válido!');
         return;
       }
+
       const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-      const filtrado = historico.find(item => item.mes === mesSelecionado);
+
+      // Aqui a correção: garantimos o formato YYYY-MM e remoção de espaços
+      const mesFiltroFormatado = mesSelecionado.trim();
+
+      const filtrado = historico.find(item => item.mes.trim() === mesFiltroFormatado);
 
       if (!filtrado) {
         alert('Nenhum planejamento encontrado para esse mês.');
@@ -379,7 +371,9 @@
         return;
       }
 
-      atualizarHistorico(); // Sempre mostrar histórico completo
+      // Atualiza histórico (não mexe no layout da tabela)
+      atualizarHistorico();
+
       mostrarGrafico(filtrado.mes, filtrado.receitas, filtrado.despesas);
     }
 
@@ -416,7 +410,6 @@
       checkboxes.forEach(cb => cb.checked = checkbox.checked);
     }
 
-    // Carregar histórico ao abrir a página
     document.addEventListener('DOMContentLoaded', () => {
       atualizarHistorico();
     });
