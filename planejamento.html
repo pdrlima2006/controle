@@ -4,22 +4,152 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📅 Planejamento Mensal</title>
-  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+      margin: 0;
+    }
+    h1, h2 {
+      color: #003366;
+      text-align: center;
+    }
+    form#planejamentoForm {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-end;
+    }
+    form#planejamentoForm label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+    form#planejamentoForm > * {
+      flex: 1 1 180px;
+      display: flex;
+      flex-direction: column;
+    }
+    form#planejamentoForm button {
+      flex: 1 1 100%;
+      padding: 10px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      max-width: 200px;
+      align-self: center;
+    }
+
+    #graficoContainer {
+      max-width: 600px;
+      background: white;
+      margin: 0 auto 30px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    #resultadoSaldo {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 15px;
+    }
+
+    table {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 40px auto;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    thead {
+      background: #003366;
+      color: white;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    tbody tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    /* Checkbox column */
+    th.checkbox-col, td.checkbox-col {
+      width: 40px;
+    }
+
+    /* Botões deletar */
+    .acoes-deletar {
+      max-width: 800px;
+      margin: 10px auto 0 auto;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .acoes-deletar button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      background-color: #d32f2f;
+      transition: background-color 0.3s ease;
+    }
+    .acoes-deletar button:hover {
+      background-color: #b02525;
+    }
+
+    /* Responsividade */
+    @media (max-width: 700px) {
+      form#planejamentoForm {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      form#planejamentoForm > * {
+        flex: 1 1 100%;
+      }
+      #graficoContainer, table, .acoes-deletar {
+        max-width: 100%;
+        margin: 20px auto;
+      }
+    }
+  </style>
 </head>
 <body>
   <h1>📅 Planejamento Mensal</h1>
 
   <form id="planejamentoForm">
-    <label for="mes">Mês:</label>
-    <input type="month" name="mes" required />
-
-    <label for="receitas">Previsão de Receitas:</label>
-    <input type="text" id="receitas" required />
-
-    <label for="despesas">Previsão de Despesas:</label>
-    <input type="text" id="despesas" required />
-
+    <div>
+      <label for="mes">Mês:</label>
+      <input type="month" name="mes" required />
+    </div>
+    <div>
+      <label for="receitas">Previsão de Receitas:</label>
+      <input type="text" id="receitas" required />
+    </div>
+    <div>
+      <label for="despesas">Previsão de Despesas:</label>
+      <input type="text" id="despesas" required />
+    </div>
     <button type="submit">Salvar</button>
   </form>
 
@@ -31,9 +161,16 @@
 
   <div>
     <h2>📊 Histórico de Planejamento</h2>
-    <table border="1">
+
+    <div class="acoes-deletar">
+      <button onclick="deletarSelecionados()">Deletar Selecionados</button>
+      <button onclick="deletarTodos()">Deletar Tudo</button>
+    </div>
+
+    <table>
       <thead>
         <tr>
+          <th class="checkbox-col"><input type="checkbox" id="checkTodos" /></th>
           <th>Mês</th>
           <th>Receitas</th>
           <th>Despesas</th>
@@ -48,11 +185,11 @@
     const receitasInput = document.getElementById("receitas");
     const despesasInput = document.getElementById("despesas");
     const form = document.getElementById("planejamentoForm");
-    const graficoContainer = document.getElementById("graficoContainer");
     const tituloMes = document.getElementById("tituloMes");
     const resultadoSaldo = document.getElementById("resultadoSaldo");
     const tabelaHistorico = document.querySelector("#tabelaHistorico");
     const ctx = document.getElementById("graficoPizza").getContext("2d");
+    const checkTodos = document.getElementById("checkTodos");
     let grafico;
 
     function formatarMoeda(input) {
@@ -106,21 +243,28 @@
       const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
       tabelaHistorico.innerHTML = "";
 
-      historico.forEach(({ mes, receitas, despesas }) => {
+      historico.forEach(({ mes, receitas, despesas }, index) => {
         const [ano, mesNum] = mes.split("-");
         const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
 
         const saldo = receitas - despesas;
 
         const tr = document.createElement("tr");
+
         tr.innerHTML = `
+          <td class="checkbox-col"><input type="checkbox" data-index="${index}" /></td>
           <td>${nomeMes}/${ano}</td>
           <td>${receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
           <td>${despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-          <td>${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+          <td style="color: ${saldo >= 0 ? "green" : "red"};">
+            ${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+          </td>
         `;
         tabelaHistorico.appendChild(tr);
       });
+
+      // Atualiza checkbox "Selecionar Todos"
+      atualizarCheckTodos();
     }
 
     function mostrarGrafico(mes, receitas, despesas) {
@@ -139,6 +283,12 @@
             backgroundColor: ["#4CAF50", "#F44336"],
           }],
         },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
       });
     }
 
@@ -149,6 +299,59 @@
       })}`;
       resultadoSaldo.style.color = saldo >= 0 ? "green" : "red";
     }
+
+    function deletarSelecionados() {
+      const checkboxes = tabelaHistorico.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert("Selecione ao menos um item para deletar.");
+        return;
+      }
+      let planejamentos = JSON.parse(localStorage.getItem("planejamentos")) || [];
+      // Pegando índices e removendo em ordem decrescente para não bagunçar o array
+      const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+      indices.forEach(i => {
+        planejamentos.splice(i, 1);
+      });
+      localStorage.setItem("planejamentos", JSON.stringify(planejamentos));
+      atualizarHistorico();
+      resultadoSaldo.textContent = "";
+      if (planejamentos.length > 0) {
+        // Mostrar gráfico do último mês salvo
+        const ultimo = planejamentos[planejamentos.length - 1];
+        mostrarGrafico(ultimo.mes, ultimo.receitas, ultimo.despesas);
+        mostrarSaldo(ultimo.receitas - ultimo.despesas);
+      } else {
+        if (grafico) grafico.destroy();
+      }
+    }
+
+    function deletarTodos() {
+      if (!confirm("Tem certeza que deseja deletar TODO o histórico de planejamento?")) return;
+      localStorage.removeItem("planejamentos");
+      atualizarHistorico();
+      resultadoSaldo.textContent = "";
+      if (grafico) grafico.destroy();
+    }
+
+    function atualizarCheckTodos() {
+      const checkboxes = tabelaHistorico.querySelectorAll('input[type="checkbox"]');
+      const checked = tabelaHistorico.querySelectorAll('input[type="checkbox"]:checked');
+      checkTodos.checked = checkboxes.length === checked.length && checkboxes.length > 0;
+      checkTodos.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+
+    // Controle do checkbox "Selecionar Todos"
+    checkTodos.addEventListener("change", () => {
+      const checkboxes = tabelaHistorico.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = checkTodos.checked);
+    });
+
+    // Atualizar estado do checkbox "Selecionar Todos" quando marcar individualmente
+    tabelaHistorico.addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        atualizarCheckTodos();
+      }
+    });
 
     document.addEventListener("DOMContentLoaded", () => {
       atualizarHistorico();
