@@ -6,7 +6,6 @@
   <title>📅 Planejamento Mensal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Seu CSS continua igual */
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
@@ -95,12 +94,16 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
+      overflow-x: auto;
+      display: block;
+      max-width: 100%;
     }
     th, td {
       border: 1px solid #ddd;
       padding: 8px 12px;
       text-align: center;
       vertical-align: middle;
+      white-space: nowrap;
     }
     th {
       background-color: #003366;
@@ -126,6 +129,25 @@
       font-weight: normal;
       font-size: 14px;
       color: #555;
+    }
+    @media (max-width: 480px) {
+      .linha-campos {
+        flex-direction: column;
+      }
+      .campo {
+        flex: 1 1 100%;
+      }
+      button {
+        width: 100%;
+        margin-top: 10px;
+      }
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+      th, td {
+        white-space: nowrap;
+      }
     }
   </style>
 </head>
@@ -161,7 +183,7 @@
           <input type="month" id="filtroMes" />
         </div>
         <div class="campo" style="flex: 1 1 auto;">
-          <button type="button" onclick="filtrarPorMes()">Atualizar Gráfico</button>
+          <button type="button" onclick="filtrarPorMes()">Gerar Gráfico</button>
           <button class="deletar" onclick="deletarSelecionados()">Deletar Selecionados</button>
           <button class="deletar" onclick="deletarTodos()">Deletar Tudo</button>
         </div>
@@ -206,20 +228,16 @@
     const ctx = document.getElementById("graficoPizza").getContext("2d");
     let grafico = null;
 
-    // Formatar moeda no input
+    // Formatar moeda no input em tempo real
     function formatarMoeda(event) {
       let input = event.target;
       let valor = input.value;
-
       valor = valor.replace(/\D/g, '');
-
       if (valor.length === 0) {
         input.value = '';
         return;
       }
-
       valor = (parseInt(valor) / 100).toFixed(2);
-
       input.value = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
@@ -266,7 +284,7 @@
       atualizarHistorico();
       form.reset();
 
-      // Ocultar gráfico após salvar, pois só mostraremos quando filtrar
+      // Esconder gráfico até filtrar
       graficoContainer.style.display = 'none';
       resultadoSaldo.textContent = '';
       detalhesSaldo.textContent = '';
@@ -361,7 +379,7 @@
         return;
       }
 
-      atualizarHistorico(); // Mostra todo histórico normalmente (com checkboxes)
+      atualizarHistorico(); // Sempre mostrar histórico completo
       mostrarGrafico(filtrado.mes, filtrado.receitas, filtrado.despesas);
     }
 
