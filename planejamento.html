@@ -6,6 +6,7 @@
   <title>📅 Planejamento Mensal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Seu CSS continua igual */
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
@@ -108,16 +109,23 @@
     }
     #graficoContainer {
       text-align: center;
+      display: none;
     }
     #tituloMes {
       font-weight: 700;
       margin-bottom: 10px;
       font-size: 18px;
     }
-    #resultadoSaldo {
+    #resultadoSaldo, #detalhesSaldo {
       font-weight: 700;
       margin-top: 15px;
       font-size: 16px;
+    }
+    #detalhesSaldo {
+      margin-top: 5px;
+      font-weight: normal;
+      font-size: 14px;
+      color: #555;
     }
   </style>
 </head>
@@ -127,7 +135,7 @@
 
   <main>
 
-    <form id="planejamentoForm">
+    <form id="planejamentoForm" autocomplete="off">
       <div class="linha-campos">
         <div class="campo">
           <label for="mes">Mês:</label>
@@ -135,11 +143,11 @@
         </div>
         <div class="campo">
           <label for="receitas">Previsão de Receitas:</label>
-          <input type="text" id="receitas" name="receitas" required />
+          <input type="text" id="receitas" name="receitas" placeholder="R$ 0,00" required />
         </div>
         <div class="campo">
           <label for="despesas">Previsão de Despesas:</label>
-          <input type="text" id="despesas" name="despesas" required />
+          <input type="text" id="despesas" name="despesas" placeholder="R$ 0,00" required />
         </div>
       </div>
       <button type="submit">Salvar</button>
@@ -154,18 +162,14 @@
         </div>
         <div class="campo" style="flex: 1 1 auto;">
           <button type="button" onclick="filtrarPorMes()">Atualizar Gráfico</button>
-          <button type="button" onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
-          <button type="button" onclick="mostrarSaldoMes()">Ver Saldo do Mês</button>
+          <button class="deletar" onclick="deletarSelecionados()">Deletar Selecionados</button>
+          <button class="deletar" onclick="deletarTodos()">Deletar Tudo</button>
         </div>
       </div>
     </div>
 
     <div class="historico-container">
       <h3>📋 Histórico</h3>
-      <div class="btn-group">
-        <button class="deletar" onclick="deletarSelecionados()">Deletar Selecionados</button>
-        <button class="deletar" onclick="deletarTodos()">Deletar Tudo</button>
-      </div>
       <table>
         <thead>
           <tr>
@@ -180,10 +184,11 @@
       </table>
     </div>
 
-    <div id="graficoContainer" style="display:none;">
+    <div id="graficoContainer">
       <h3 id="tituloMes">Gráfico de Planejamento</h3>
       <canvas id="graficoPizza" width="400" height="400"></canvas>
       <p id="resultadoSaldo"></p>
+      <p id="detalhesSaldo"></p>
     </div>
 
   </main>
@@ -196,102 +201,113 @@
     const graficoContainer = document.getElementById("graficoContainer");
     const tituloMes = document.getElementById("tituloMes");
     const resultadoSaldo = document.getElementById("resultadoSaldo");
+    const detalhesSaldo = document.getElementById("detalhesSaldo");
     const tabelaHistorico = document.getElementById("tabelaHistorico");
     const ctx = document.getElementById("graficoPizza").getContext("2d");
-    let grafico;
+    let grafico = null;
 
-    // Formata moeda em tempo real
-    function formatarMoeda(input) {
-      let valor = input.value.replace(/\D/g, "");
-      if (valor === "") {
-        input.value = "";
+    // Formatar moeda no input
+    function formatarMoeda(event) {
+      let input = event.target;
+      let valor = input.value;
+
+      valor = valor.replace(/\D/g, '');
+
+      if (valor.length === 0) {
+        input.value = '';
         return;
       }
+
       valor = (parseInt(valor) / 100).toFixed(2);
-      input.value = parseFloat(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      });
+
+      input.value = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
+
     [receitasInput, despesasInput].forEach(input => {
-      input.addEventListener("input", () => formatarMoeda(input));
+      input.addEventListener('input', formatarMoeda);
+      input.addEventListener('blur', () => {
+        if (!input.value) input.value = '';
+      });
     });
 
     function moedaParaNumero(valor) {
       if (!valor) return 0;
-      return parseFloat(
-        valor.replace(/\s/g, "").replace("R$", "").replace(/\./g, "").replace(",", ".")
-      ) || 0;
+      return parseFloat(valor.replace(/\s/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
     }
 
-    // Salvar planejamento no localStorage
-    form.addEventListener("submit", (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const mes = form.elements["mes"].value;
+      const mes = form.elements['mes'].value;
       const receitas = moedaParaNumero(receitasInput.value);
       const despesas = moedaParaNumero(despesasInput.value);
 
       if (!mes || isNaN(receitas) || isNaN(despesas)) {
-        alert("Preencha todos os campos corretamente.");
+        alert('Preencha todos os campos corretamente.');
         return;
       }
 
-      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
 
-      // Evitar duplicados no mesmo mês (opcional)
       const existe = historico.some(item => item.mes === mes);
       if (existe) {
-        alert("Já existe planejamento salvo para esse mês.");
-        return;
+        if (!confirm('Já existe planejamento para este mês. Deseja substituir?')) {
+          return;
+        } else {
+          const index = historico.findIndex(item => item.mes === mes);
+          historico[index] = { mes, receitas, despesas };
+        }
+      } else {
+        historico.push({ mes, receitas, despesas });
       }
 
-      historico.push({ mes, receitas, despesas });
-      localStorage.setItem("planejamentos", JSON.stringify(historico));
+      localStorage.setItem('planejamentos', JSON.stringify(historico));
 
       atualizarHistorico();
-      mostrarGrafico(mes, receitas, despesas);
-      mostrarSaldo(receitas - despesas);
-
       form.reset();
+
+      // Ocultar gráfico após salvar, pois só mostraremos quando filtrar
+      graficoContainer.style.display = 'none';
+      resultadoSaldo.textContent = '';
+      detalhesSaldo.textContent = '';
     });
 
     function atualizarHistorico() {
-      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
-      tabelaHistorico.innerHTML = "";
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      tabelaHistorico.innerHTML = '';
 
       historico.forEach(({ mes, receitas, despesas }, index) => {
-        const [ano, mesNum] = mes.split("-");
-        const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
+        const [ano, mesNum] = mes.split('-');
+        const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString('pt-BR', { month: 'long' });
         const saldo = receitas - despesas;
 
-        const tr = document.createElement("tr");
+        const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="checkbox" class="chkSelecionado" data-index="${index}" /></td>
-          <td>${nomeMes}/${ano}</td>
-          <td>${receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-          <td>${despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-          <td>${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+          <td>${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}/${ano}</td>
+          <td>${receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td>${despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td style="color:${saldo >= 0 ? 'green' : 'red'}">${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         `;
         tabelaHistorico.appendChild(tr);
       });
     }
 
     function mostrarGrafico(mes, receitas, despesas) {
-      graficoContainer.style.display = "block";
-      const [ano, mesNum] = mes.split("-");
-      const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
-      tituloMes.textContent = `Gráfico de ${nomeMes}/${ano}`;
+      graficoContainer.style.display = 'block';
+      const [ano, mesNum] = mes.split('-');
+      const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString('pt-BR', { month: 'long' });
+      tituloMes.textContent = `Gráfico de ${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}/${ano}`;
 
       if (grafico) grafico.destroy();
 
       grafico = new Chart(ctx, {
-        type: "pie",
+        type: 'pie',
         data: {
-          labels: ["Receitas", "Despesas"],
+          labels: ['Receitas', 'Despesas'],
           datasets: [{
             data: [receitas, despesas],
-            backgroundColor: ["#4CAF50", "#F44336"],
+            backgroundColor: ['#4CAF50', '#F44336'],
           }],
         },
         options: {
@@ -300,104 +316,90 @@
             legend: {
               position: 'bottom',
             },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  let val = context.parsed;
+                  if(label) {
+                    label += ': ';
+                  }
+                  label += val.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                  return label;
+                }
+              }
+            }
           },
         },
       });
+
+      mostrarSaldoDetalhado(receitas, despesas);
     }
 
-    function mostrarSaldo(saldo) {
-      resultadoSaldo.textContent = `Saldo: ${saldo.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      })}`;
-      resultadoSaldo.style.color = saldo >= 0 ? "green" : "red";
+    function mostrarSaldoDetalhado(receitas, despesas) {
+      const saldo = receitas - despesas;
+      resultadoSaldo.textContent = `Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+      resultadoSaldo.style.color = saldo >= 0 ? 'green' : 'red';
+
+      detalhesSaldo.textContent = `${receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} - ${despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} = ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
     }
 
     function filtrarPorMes() {
       const mesSelecionado = filtroMesInput.value;
       if (!mesSelecionado) {
-        alert("Selecione um mês válido!");
+        alert('Selecione um mês válido!');
         return;
       }
-      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
-      const filtrado = historico.filter(item => item.mes === mesSelecionado);
+      const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      const filtrado = historico.find(item => item.mes === mesSelecionado);
 
-      if (filtrado.length === 0) {
-        alert("Nenhum planejamento encontrado para esse mês.");
+      if (!filtrado) {
+        alert('Nenhum planejamento encontrado para esse mês.');
+        graficoContainer.style.display = 'none';
+        resultadoSaldo.textContent = '';
+        detalhesSaldo.textContent = '';
         return;
       }
 
-      atualizarHistoricoFiltrado(filtrado);
-      mostrarGrafico(filtrado[0].mes, filtrado[0].receitas, filtrado[0].despesas);
-      mostrarSaldo(filtrado[0].receitas - filtrado[0].despesas);
-    }
-
-    function atualizarHistoricoFiltrado(filtrado) {
-      tabelaHistorico.innerHTML = "";
-      filtrado.forEach(({ mes, receitas, despesas }, index) => {
-        const [ano, mesNum] = mes.split("-");
-        const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString("pt-BR", { month: "long" });
-        const saldo = receitas - despesas;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td></td>
-          <td>${nomeMes}/${ano}</td>
-          <td>${receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-          <td>${despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-          <td>${saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-        `;
-        tabelaHistorico.appendChild(tr);
-      });
-    }
-
-    function mostrarSaldoMes() {
-      const mesSelecionado = filtroMesInput.value;
-      if (!mesSelecionado) {
-        alert("Selecione um mês primeiro.");
-        return;
-      }
-      const historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
-      const filtrado = historico.filter(item => item.mes === mesSelecionado);
-      if (filtrado.length === 0) {
-        alert("Nenhum planejamento encontrado para esse mês.");
-        return;
-      }
-      const saldo = filtrado[0].receitas - filtrado[0].despesas;
-      alert(`Saldo do mês selecionado: R$ ${saldo.toFixed(2).replace('.', ',')}`);
+      atualizarHistorico(); // Mostra todo histórico normalmente (com checkboxes)
+      mostrarGrafico(filtrado.mes, filtrado.receitas, filtrado.despesas);
     }
 
     function deletarSelecionados() {
-      const checkboxes = document.querySelectorAll(".chkSelecionado:checked");
+      const checkboxes = document.querySelectorAll('.chkSelecionado:checked');
       if (checkboxes.length === 0) {
-        alert("Selecione pelo menos um planejamento para deletar.");
+        alert('Selecione pelo menos um planejamento para deletar.');
         return;
       }
-      let historico = JSON.parse(localStorage.getItem("planejamentos")) || [];
+      let historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
       const indicesParaDeletar = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
       historico = historico.filter((_, i) => !indicesParaDeletar.includes(i));
-      localStorage.setItem("planejamentos", JSON.stringify(historico));
+      localStorage.setItem('planejamentos', JSON.stringify(historico));
       atualizarHistorico();
-      graficoContainer.style.display = historico.length > 0 ? "block" : "none";
-      resultadoSaldo.textContent = "";
+      if(historico.length === 0){
+        graficoContainer.style.display = 'none';
+        resultadoSaldo.textContent = '';
+        detalhesSaldo.textContent = '';
+      }
     }
 
     function deletarTodos() {
-      if (confirm("Tem certeza que deseja deletar todos os planejamentos?")) {
-        localStorage.removeItem("planejamentos");
+      if (confirm('Tem certeza que deseja deletar todos os planejamentos?')) {
+        localStorage.removeItem('planejamentos');
         atualizarHistorico();
-        graficoContainer.style.display = "none";
-        resultadoSaldo.textContent = "";
+        graficoContainer.style.display = 'none';
+        resultadoSaldo.textContent = '';
+        detalhesSaldo.textContent = '';
       }
     }
 
     function toggleSelecionarTodos(checkbox) {
-      const checkboxes = document.querySelectorAll(".chkSelecionado");
+      const checkboxes = document.querySelectorAll('.chkSelecionado');
       checkboxes.forEach(cb => cb.checked = checkbox.checked);
     }
 
     // Carregar histórico ao abrir a página
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
       atualizarHistorico();
     });
   </script>
