@@ -82,6 +82,16 @@
       color: white;
     }
 
+    .btn-delete {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
     a {
       display: block;
       margin-top: 20px;
@@ -131,6 +141,7 @@
     <table id="tabela-investimentos">
       <thead>
         <tr>
+          <th></th>
           <th>Instituição</th>
           <th>Tipo</th>
           <th>Valor</th>
@@ -139,6 +150,8 @@
       <tbody></tbody>
     </table>
 
+    <button class="btn-delete" id="btn-deletar">🗑 Deletar Investimento</button>
+
     <a href="dashboard.html">← Voltar ao Painel</a>
   </main>
 
@@ -146,6 +159,7 @@
     const form = document.getElementById('form-investimento');
     const valorInput = document.getElementById('valor');
     const tabelaBody = document.querySelector('#tabela-investimentos tbody');
+    const btnDeletar = document.getElementById('btn-deletar');
 
     // Formatar como moeda brasileira
     function formatarMoeda(input) {
@@ -159,13 +173,14 @@
 
     valorInput.addEventListener("input", () => formatarMoeda(valorInput));
 
-    const investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
+    let investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
 
     function atualizarTabela() {
       tabelaBody.innerHTML = "";
-      investimentos.forEach(invest => {
+      investimentos.forEach((invest, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
+          <td><input type="checkbox" data-index="${index}"></td>
           <td>${invest.banco}</td>
           <td>${invest.tipo}</td>
           <td>R$ ${invest.valor.toFixed(2).replace(".", ",")}</td>
@@ -191,6 +206,24 @@
       localStorage.setItem('investimentos', JSON.stringify(investimentos));
 
       form.reset();
+      atualizarTabela();
+    });
+
+    btnDeletar.addEventListener('click', () => {
+      const checkboxesMarcados = document.querySelectorAll('#tabela-investimentos tbody input[type="checkbox"]:checked');
+      if (checkboxesMarcados.length === 0) {
+        alert("Selecione pelo menos um investimento para excluir.");
+        return;
+      }
+
+      if (!confirm("Tem certeza que deseja excluir o(s) investimento(s) selecionado(s)?")) {
+        return;
+      }
+
+      const indicesParaRemover = Array.from(checkboxesMarcados).map(cb => parseInt(cb.dataset.index));
+
+      investimentos = investimentos.filter((_, index) => !indicesParaRemover.includes(index));
+      localStorage.setItem('investimentos', JSON.stringify(investimentos));
       atualizarTabela();
     });
   </script>
