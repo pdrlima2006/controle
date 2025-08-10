@@ -283,7 +283,8 @@
 
       historico.forEach(({ mes, receitas, despesas }, index) => {
         const [ano, mesNum] = mes.split('-');
-        const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString('pt-BR', { month: 'long' });
+        // CORREÇÃO: usar new Date(ano, mesNum - 1, 1)
+        const nomeMes = new Date(ano, mesNum - 1, 1).toLocaleString('pt-BR', { month: 'long' });
         const saldo = receitas - despesas;
 
         const tr = document.createElement('tr');
@@ -301,7 +302,8 @@
     function mostrarGrafico(mes, receitas, despesas) {
       graficoContainer.style.display = 'block';
       const [ano, mesNum] = mes.split('-');
-      const nomeMes = new Date(`${ano}-${mesNum}-01`).toLocaleString('pt-BR', { month: 'long' });
+      // CORREÇÃO: usar new Date(ano, mesNum - 1, 1)
+      const nomeMes = new Date(ano, mesNum - 1, 1).toLocaleString('pt-BR', { month: 'long' });
       tituloMes.textContent = `Gráfico de ${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}/${ano}`;
 
       if (grafico) grafico.destroy();
@@ -318,18 +320,14 @@
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              position: 'bottom',
-            },
+            legend: { position: 'bottom' },
             tooltip: {
               callbacks: {
                 label: function(context) {
                   let label = context.label || '';
                   let val = context.parsed;
-                  if(label) {
-                    label += ': ';
-                  }
-                  label += val.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                  if(label) label += ': ';
+                  label += val.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
                   return label;
                 }
               }
@@ -358,7 +356,6 @@
 
       const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
 
-      // Aqui a correção: garantimos o formato YYYY-MM e remoção de espaços
       const mesFiltroFormatado = mesSelecionado.trim();
 
       const filtrado = historico.find(item => item.mes.trim() === mesFiltroFormatado);
@@ -371,9 +368,7 @@
         return;
       }
 
-      // Atualiza histórico (não mexe no layout da tabela)
       atualizarHistorico();
-
       mostrarGrafico(filtrado.mes, filtrado.receitas, filtrado.despesas);
     }
 
