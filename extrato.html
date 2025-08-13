@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📄 Extrato Geral</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -28,12 +27,12 @@
       background: white;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     }
 
     th, td {
       padding: 12px;
-      text-align: left;
+      text-align: center;
       border-bottom: 1px solid #ddd;
     }
 
@@ -42,95 +41,69 @@
       color: white;
     }
 
-    td.positivo {
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .positivo {
       color: green;
-      font-weight: bold;
     }
 
-    td.negativo {
+    .negativo {
       color: red;
-      font-weight: bold;
     }
 
-    a {
-      display: inline-block;
+    .back {
       margin-top: 20px;
+    }
+
+    .back a {
       text-decoration: none;
       color: #003366;
       font-weight: bold;
     }
-
-    @media (max-width: 600px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-
-      td {
-        padding: 10px;
-        border: none;
-        border-bottom: 1px solid #ddd;
-      }
-
-      th {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
-  <header><h1>📄 Extrato Geral</h1></header>
-  <main>
-    <p>Aqui aparecerá seu extrato com valores <span style="color:green;">positivos</span> e <span style="color:red;">negativos</span>.</p>
 
-    <table id="tabelaExtrato">
-      <thead>
-        <tr>
-          <th>Descrição</th>
-          <th>Valor</th>
-          <th>Data</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Linhas geradas via JavaScript -->
-      </tbody>
-    </table>
+  <header>
+    <h1>📄 Extrato Geral</h1>
+  </header>
 
-    <a href="dashboard.html">← Voltar ao Painel</a>
-  </main>
+  <p>Aqui aparecerá seu extrato com valores <span class="positivo">positivos</span> e <span class="negativo">negativos</span>.</p>
 
-  <script>
-    // Função para formatar como R$ (moeda brasileira)
-    function formatarMoeda(valor) {
-      return valor.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      });
-    }
+  <table>
+    <thead>
+      <tr>
+        <th>Mês</th>
+        <th>Saldo</th>
+        <th>Investimento</th>
+        <th>Fatura</th>
+        <th>Disponível</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>08/2025</td>
+        <td>R$ 2.000,00</td>
+        <td>R$ 1.500,00</td>
+        <td class="negativo">R$ 1.200,00</td>
+        <td class="positivo"><strong>R$ 2.300,00</strong></td>
+      </tr>
+      <tr>
+        <td>07/2025</td>
+        <td>R$ 1.800,00</td>
+        <td>R$ 1.000,00</td>
+        <td class="negativo">R$ 1.400,00</td>
+        <td class="positivo"><strong>R$ 1.400,00</strong></td>
+      </tr>
+      <!-- Adicione mais meses conforme necessário -->
+    </tbody>
+  </table>
 
-    // Carrega os lançamentos do localStorage
-    const tabela = document.querySelector("#tabelaExtrato tbody");
-    const dados = JSON.parse(localStorage.getItem("lancamentos")) || [];
+  <div class="back">
+    <a href="index.html">← Voltar ao Painel</a>
+  </div>
 
-    dados.forEach(item => {
-      const tr = document.createElement("tr");
-
-      const descricao = document.createElement("td");
-      descricao.textContent = item.descricao || 'Sem descrição';
-
-      const valor = document.createElement("td");
-      const valorNumerico = parseFloat(item.valor);
-      valor.textContent = formatarMoeda(valorNumerico);
-      valor.className = valorNumerico >= 0 ? "positivo" : "negativo";
-
-      const data = document.createElement("td");
-      data.textContent = item.data || new Date().toLocaleDateString();
-
-      tr.appendChild(descricao);
-      tr.appendChild(valor);
-      tr.appendChild(data);
-
-      tabela.appendChild(tr);
-    });
-  </script>
 </body>
 </html>
