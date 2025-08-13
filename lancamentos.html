@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
+    /* seu CSS permanece igual */
     body {
       font-family: Arial, sans-serif;
       background: #f9f9f9;
@@ -235,6 +236,12 @@
       atualizarGrafico(transacoes);
       saldoMesEl.textContent = '';
       inputFiltroMes.value = '';
+
+      // === ADICIONADO: calcular saldo geral e salvar no localStorage ===
+      const entradas = transacoes.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
+      const saidas = transacoes.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
+      const saldoGeral = entradas - saidas;
+      localStorage.setItem('saldo', saldoGeral);
     }
 
     function filtrarPorMes() {
@@ -348,85 +355,4 @@
         doc.text(t.tipo.toUpperCase(), 50, y);
         doc.text(formatarValor(Number(t.valor)), 90, y);
         doc.text(t.descricao, 130, y, { maxWidth: 60 });
-        y += 8;
-      });
-
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-      y += 8;
-      doc.setLineWidth(0.5);
-      doc.line(14, y, 196, y);
-      y += 8;
-
-      doc.setFont("helvetica", "bold");
-      doc.text(`ENTRADAS: ${formatarValor(entradas)}`, 14, y);
-      y += 8;
-      doc.text(`SAÍDAS: ${formatarValor(saidas)}`, 14, y);
-      y += 8;
-      doc.text(`SALDO DO MÊS: ${formatarValor(saldo)}`, 14, y);
-
-      doc.save(`relatorio_${ano}-${mes}.pdf`);
-    }
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const tipo = form.tipo.value;
-      const valor = parseFloat(form.valor.value);
-      const descricao = form.descricao.value;
-      const data = form.data.value;
-      const nova = { tipo, valor, descricao, data };
-
-      const arquivo = form.notaFiscal.files[0];
-      if (arquivo) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          nova.notaFiscalBase64 = reader.result;
-          nova.notaFiscalNome = arquivo.name;
-          salvarTransacao(nova);
-        };
-        reader.readAsDataURL(arquivo);
-      } else {
-        salvarTransacao(nova);
-      }
-    });
-
-    function salvarTransacao(nova) {
-      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      transacoes.push(nova);
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      form.reset();
-      carregarDados();
-    }
-
-    function deletarSelecionados() {
-      const checkboxes = lista.querySelectorAll('input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) {
-        alert('Selecione ao menos um item para deletar.');
-        return;
-      }
-
-      let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      // Pega os índices selecionados, ordena em ordem decrescente para remover sem erro
-      const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
-
-      indices.forEach(i => {
-        transacoes.splice(i, 1);
-      });
-
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      carregarDados();
-    }
-
-    function deletarTodos() {
-      if (!confirm('Tem certeza que deseja deletar TODAS as transações?')) return;
-      localStorage.removeItem('transacoes');
-      carregarDados();
-    }
-
-    document.addEventListener('DOMContentLoaded', carregarDados);
-  </script>
-</body>
-</html>
+        y
