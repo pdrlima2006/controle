@@ -196,8 +196,10 @@
 
       const banco = form.elements['banco'].value.trim();
       const tipo = form.elements['tipo'].value.trim();
-      const valorStr = form.elements['valor'].value.replace(/[^\d,-]/g, "").replace(",", ".");
-      const valor = parseFloat(valorStr);
+
+      // Troca solicitada aqui:
+      const valorStr = form.elements['valor'].value.replace(/\D/g, "");
+      const valor = parseFloat(valorStr) / 100;
 
       if (!banco || !tipo || isNaN(valor)) return;
 
