@@ -3,46 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>📄 Extrato Geral</title>
+  <title>Extrato Geral</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
+      background-color: #f4f4f4;
       padding: 20px;
     }
 
-    header {
-      background-color: #003366;
-      color: white;
-      padding: 15px;
-      border-radius: 6px;
-      text-align: center;
-      margin-bottom: 20px;
+    h1 {
+      color: #003366;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      border-radius: 8px;
-      overflow: hidden;
       box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     }
 
     th, td {
       padding: 12px;
       text-align: center;
-      border-bottom: 1px solid #ddd;
+      border: 1px solid #ddd;
     }
 
     th {
       background-color: #003366;
       color: white;
-    }
-
-    tr:hover {
-      background-color: #f1f1f1;
     }
 
     .positivo {
@@ -66,44 +54,55 @@
 </head>
 <body>
 
-  <header>
-    <h1>📄 Extrato Geral</h1>
-  </header>
-
-  <p>Aqui aparecerá seu extrato com valores <span class="positivo">positivos</span> e <span class="negativo">negativos</span>.</p>
+  <h1>📄 Extrato Geral</h1>
+  <p>Fórmula: <strong>Saldo + Investimento – Fatura = Saldo Disponível</strong></p>
 
   <table>
     <thead>
       <tr>
-        <th>Mês</th>
         <th>Saldo</th>
         <th>Investimento</th>
         <th>Fatura</th>
         <th>Disponível</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>08/2025</td>
-        <td>R$ 2.000,00</td>
-        <td>R$ 1.500,00</td>
-        <td class="negativo">R$ 1.200,00</td>
-        <td class="positivo"><strong>R$ 2.300,00</strong></td>
-      </tr>
-      <tr>
-        <td>07/2025</td>
-        <td>R$ 1.800,00</td>
-        <td>R$ 1.000,00</td>
-        <td class="negativo">R$ 1.400,00</td>
-        <td class="positivo"><strong>R$ 1.400,00</strong></td>
-      </tr>
-      <!-- Adicione mais meses conforme necessário -->
+    <tbody id="extrato-body">
+      <!-- Conteúdo gerado automaticamente -->
     </tbody>
   </table>
 
   <div class="back">
-    <a href="index.html">← Voltar ao Painel</a>
+    <a href="dashboard.html">← Voltar ao Painel</a>
   </div>
+
+  <script>
+    function formatarReal(valor) {
+      return valor.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    function carregarExtrato() {
+      const saldo = Number(localStorage.getItem("saldo")) || 0;
+      const investimento = Number(localStorage.getItem("investimento")) || 0;
+      const fatura = Number(localStorage.getItem("fatura")) || 0;
+
+      const disponivel = saldo + investimento - fatura;
+      const classe = disponivel >= 0 ? "positivo" : "negativo";
+
+      document.getElementById("extrato-body").innerHTML = `
+        <tr>
+          <td>${formatarReal(saldo)}</td>
+          <td>${formatarReal(investimento)}</td>
+          <td>${formatarReal(fatura)}</td>
+          <td class="${classe}"><strong>${formatarReal(disponivel)}</strong></td>
+        </tr>
+      `;
+    }
+
+    carregarExtrato();
+  </script>
 
 </body>
 </html>
