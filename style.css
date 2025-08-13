@@ -93,3 +93,73 @@ button:hover {
     padding: 8px;
   }
 }
+
+/* ========================= */
+/* Boneco + Maleta Animados */
+/* ========================= */
+.scene {
+  position: relative;
+  height: 200px;
+  margin-top: 30px;
+}
+
+.character {
+  position: absolute;
+  left: -150px;
+  bottom: 0;
+  animation: walk-in 3s forwards;
+}
+
+.head {
+  width: 40px;
+  height: 40px;
+  background: peachpuff;
+  border-radius: 50%;
+  margin: auto;
+}
+
+.body {
+  width: 40px;
+  height: 60px;
+  background: navy;
+  margin: auto;
+}
+
+.legs {
+  width: 40px;
+  height: 20px;
+  background: black;
+  margin: auto;
+}
+
+.briefcase {
+  position: absolute;
+  left: 120px;
+  bottom: 0;
+  width: 50px;
+  height: 35px;
+  background: brown;
+  border: 2px solid #000;
+  border-radius: 5px;
+  transition: transform 1s;
+  transform-origin: bottom;
+}
+
+.briefcase.open {
+  transform: rotateX(150deg);
+}
+
+@keyframes walk-in {
+  0% { left: -150px; }
+  100% { left: 100px; }
+}
+
+#login-section {
+  margin-top: 20px;
+  animation: fade-in 1s forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
