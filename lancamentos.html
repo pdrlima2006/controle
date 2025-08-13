@@ -176,11 +176,11 @@
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.dataset.index = index;
-        checkbox.id = transacao-${index};
+        checkbox.id = `transacao-${index}`;
 
         const label = document.createElement('label');
-        label.htmlFor = transacao-${index};
-        label.innerHTML = ${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao});
+        label.htmlFor = `transacao-${index}`;
+        label.innerHTML = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
         if (t.notaFiscalNome) {
           const link = document.createElement('a');
           link.href = t.notaFiscalBase64;
@@ -210,8 +210,8 @@
         type: 'pie',
         data: {
           labels: [
-            Entradas (${formatarValor(entradas)}),
-            Saídas (${formatarValor(saidas)})
+            `Entradas (${formatarValor(entradas)})`,
+            `Saídas (${formatarValor(saidas)})`
           ],
           datasets: [{
             data: [entradas, saidas],
@@ -277,7 +277,7 @@
       const saidas = filtradas.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
       const saldo = entradas - saidas;
 
-      saldoMesEl.textContent = Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)});
+      saldoMesEl.textContent = `Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)})`;
     }
 
     function nomeMesPorExtenso(mes) {
@@ -293,7 +293,8 @@
       return d.toLocaleDateString('pt-BR');
     }
 
-    function gerarPdfDoMes() {
+    async function gerarPdfDoMes() {
+      const { jsPDF } = window.jspdf;
       const mesSelecionado = inputFiltroMes.value;
       if (!mesSelecionado) {
         alert("Selecione um mês para gerar o PDF.");
@@ -302,131 +303,105 @@
 
       const [ano, mes] = mesSelecionado.split("-");
       const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-
       const filtradas = transacoes.filter(t => {
-        const [anoT, mesT] = t.data.split('-');
+        const [anoT, mesT] = t.data.split("-");
         return anoT === ano && mesT === mes;
       });
 
       if (filtradas.length === 0) {
-        alert("Não há transações para o mês selecionado.");
+        alert("Não há transações para este mês.");
         return;
       }
 
-      const entradas = filtradas.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
-      const saidas = filtradas.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
-      const saldo = entradas - saidas;
+      const pdf = new jsPDF();
+      pdf.setFontSize(18);
+      pdf.text(`Relatório de Entradas e Saídas - ${nomeMesPorExtenso(mes)} de ${ano}`, 10, 20);
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      pdf.setFontSize(12);
+      let y = 30;
 
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      const titulo = RELATÓRIO DO MÊS DE ${nomeMesPorExtenso(mes)} DE ${ano};
-      doc.text(titulo, 14, 20);
+      filtradas.forEach(t => {
+        pdf.text(`Data: ${formatarDataBR(t.data)}`, 10, y);
+        pdf.text(`Tipo: ${t.tipo}`, 60, y);
+        pdf.text(`Valor: ${formatarValor(Number(t.valor))}`, 110, y);
+        pdf.text(`Descrição: ${t.descricao}`, 160, y);
+        y += 10;
 
-      doc.setLineWidth(0.5);
-      doc.line(14, 24, 196, 24);
-
-      let y = 32;
-
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("DATA", 14, y);
-      doc.text("TIPO", 50, y);
-      doc.text("VALOR", 90, y);
-      doc.text("DESCRIÇÃO", 130, y);
-      y += 8;
-      doc.setFont("helvetica", "normal");
-
-      filtradas.forEach((t) => {
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.text(formatarDataBR(t.data), 14, y);
-        doc.text(t.tipo.toUpperCase(), 50, y);
-        doc.text(formatarValor(Number(t.valor)), 90, y);
-        doc.text(t.descricao, 130, y, { maxWidth: 60 });
-        y += 8;
+        // Se quiser colocar a nota fiscal (base64), poderia tentar inserir a imagem, mas pdf com muitas imagens pode ficar pesado.
       });
 
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
+      pdf.save(`Relatorio_${ano}_${mes}.pdf`);
+    }
+
+    function deletarSelecionados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      const checkboxes = lista.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert('Selecione ao menos uma transação para deletar.');
+        return;
       }
-      y += 8;
-      doc.setLineWidth(0.5);
-      doc.line(14, y, 196, y);
-      y += 8;
 
-      doc.setFont("helvetica", "bold");
-      doc.text(ENTRADAS: ${formatarValor(entradas)}, 14, y);
-      y += 8;
-      doc.text(SAÍDAS: ${formatarValor(saidas)}, 14, y);
-      y += 8;
-      doc.text(SALDO DO MÊS: ${formatarValor(saldo)}, 14, y);
+      // Remover do array pelas posições
+      const indicesParaRemover = Array.from(checkboxes).map(cb => Number(cb.dataset.index));
 
-      doc.save(relatorio_${ano}-${mes}.pdf);
+      // Filtrar as que não estão selecionadas
+      const novasTransacoes = transacoes.filter((_, i) => !indicesParaRemover.includes(i));
+
+      localStorage.setItem('transacoes', JSON.stringify(novasTransacoes));
+      carregarDados();
+    }
+
+    function deletarTodos() {
+      if (confirm('Deseja realmente deletar todas as transações?')) {
+        localStorage.removeItem('transacoes');
+        carregarDados();
+      }
     }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const tipo = form.tipo.value;
-      const valor = parseFloat(form.valor.value);
-      const descricao = form.descricao.value;
-      const data = form.data.value;
-      const nova = { tipo, valor, descricao, data };
+      const dados = new FormData(form);
+      const tipo = dados.get('tipo');
+      const valor = Number(dados.get('valor')).toFixed(2);
+      const descricao = dados.get('descricao');
+      const data = dados.get('data');
+      const notaFiscalArquivo = form.notaFiscal.files[0];
 
-      const arquivo = form.notaFiscal.files[0];
-      if (arquivo) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          nova.notaFiscalBase64 = reader.result;
-          nova.notaFiscalNome = arquivo.name;
-          salvarTransacao(nova);
-        };
-        reader.readAsDataURL(arquivo);
-      } else {
-        salvarTransacao(nova);
-      }
-    });
-
-    function salvarTransacao(nova) {
-      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      transacoes.push(nova);
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      form.reset();
-      carregarDados();
-    }
-
-    function deletarSelecionados() {
-      const checkboxes = lista.querySelectorAll('input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) {
-        alert('Selecione ao menos um item para deletar.');
+      if (!tipo || !valor || !descricao || !data) {
+        alert('Preencha todos os campos obrigatórios.');
         return;
       }
 
-      let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-      // Pega os índices selecionados, ordena em ordem decrescente para remover sem erro
-      const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b - a);
+      if (notaFiscalArquivo) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          salvarTransacao({
+            tipo,
+            valor,
+            descricao,
+            data,
+            notaFiscalNome: notaFiscalArquivo.name,
+            notaFiscalBase64: event.target.result
+          });
+        };
+        reader.readAsDataURL(notaFiscalArquivo);
+      } else {
+        salvarTransacao({ tipo, valor, descricao, data });
+      }
+    });
 
-      indices.forEach(i => {
-        transacoes.splice(i, 1);
-      });
-
+    function salvarTransacao(transacao) {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(transacao);
       localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      form.reset();
       carregarDados();
+      alert('Transação salva com sucesso!');
     }
 
-    function deletarTodos() {
-      if (!confirm('Tem certeza que deseja deletar TODAS as transações?')) return;
-      localStorage.removeItem('transacoes');
-      carregarDados();
-    }
-
-    document.addEventListener('DOMContentLoaded', carregarDados);
+    // Carregar dados ao iniciar
+    carregarDados();
   </script>
 </body>
 </html>
