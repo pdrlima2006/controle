@@ -1,0 +1,9 @@
+# Exported from Render on 2025-08-19T14:42:02Z
+services:
+- type: web
+  name: controle
+  runtime: static
+  repo: https://github.com/pdrlima2006/controle
+  staticPublishPath: .
+  autoDeployTrigger: commit
+version: "1"
