@@ -11,44 +11,47 @@
     <input type="text" name="username" placeholder="Usuário" required />
     <input type="password" name="password" placeholder="Senha" required />
     <button type="submit">Cadastrar</button>
-    <div id="mensagem"></div>
+    <div id="mensagem" style="color:red; margin-top:10px;"></div>
   </form>
 
-  <div class="link-buttons">
+  <div class="link-buttons" style="margin-top: 10px;">
     <button onclick="window.location.href='index.html'">Voltar para login</button>
   </div>
 
-  <script>
-    const backendURL = "https://controle-kd5w.onrender.com";
+  <script type="module">
+    import { logout } from './script.js';
 
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    const registerForm = document.getElementById('registerForm');
+    const mensagem = document.getElementById('mensagem');
+
+    registerForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const username = this.username.value.trim();
-      const password = this.password.value.trim();
+      const username = registerForm.username.value.trim();
+      const password = registerForm.password.value.trim();
 
       if (!username || !password) {
-        document.getElementById('mensagem').innerText = "Preencha todos os campos!";
+        mensagem.innerText = "Preencha todos os campos!";
         return;
       }
 
-      try {
-        const res = await fetch(`${backendURL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
+      // Pega usuários cadastrados do localStorage
+      const users = JSON.parse(localStorage.getItem('users')) || [];
 
-        const data = await res.json();
-        if (res.ok) {
-          alert("Cadastro realizado com sucesso!");
-          window.location.href = "index.html";
-        } else {
-          document.getElementById('mensagem').innerText = data.message || "Erro ao cadastrar";
-        }
-      } catch {
-        document.getElementById('mensagem').innerText = "Erro de conexão com servidor!";
+      // Verifica se usuário já existe
+      const exists = users.find(u => u.username === username);
+      if (exists) {
+        mensagem.innerText = "Usuário já cadastrado!";
+        return;
       }
+
+      // Adiciona novo usuário
+      users.push({ username, password });
+      localStorage.setItem('users', JSON.stringify(users));
+
+      // Feedback e redirecionamento
+      alert("Cadastro realizado com sucesso!");
+      window.location.href = "index.html";
     });
   </script>
 </body>
