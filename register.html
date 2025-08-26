@@ -21,50 +21,13 @@
       width: 320px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h1 {
-      margin-bottom: 20px;
-      font-weight: 700;
-      font-size: 1.5rem;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    button {
-      background: #003366;
-      color: white;
-      border: none;
-      width: 100%;
-      padding: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    button:hover {
-      background: #0055aa;
-    }
-    .link-buttons {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 320px;
-    }
-    .link-buttons button {
-      background-color: #003366;
-      color: white;
-    }
-    #mensagem {
-      margin-top: 15px;
-      font-weight: 600;
-      color: red;
-      text-align: center;
-    }
+    h1 { margin-bottom: 20px; font-weight: 700; font-size: 1.5rem; }
+    input { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+    button { background: #003366; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; cursor: pointer; border-radius: 4px; font-size: 1rem; }
+    button:hover { background: #0055aa; }
+    .link-buttons { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; width: 320px; }
+    .link-buttons button { background-color: #003366; color: white; }
+    #mensagem { margin-top: 15px; font-weight: 600; color: red; text-align: center; }
   </style>
 </head>
 <body>
@@ -81,18 +44,35 @@
   </div>
 
   <script>
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const backendURL = "https://controle-kd5w.onrender.com";
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const username = this.username.value.trim();
       const password = this.password.value.trim();
 
-      if (username && password) {
-        localStorage.setItem('userData', JSON.stringify({ username, password }));
-        alert('Cadastro realizado com sucesso!');
-        window.location.href = 'index.html';
-      } else {
+      if (!username || !password) {
         document.getElementById('mensagem').innerText = "Preencha todos os campos!";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${backendURL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("Cadastro realizado com sucesso!");
+          window.location.href = "index.html";
+        } else {
+          document.getElementById('mensagem').innerText = data.message || "Erro ao cadastrar";
+        }
+      } catch {
+        document.getElementById('mensagem').innerText = "Erro de conexão com servidor!";
       }
     });
   </script>
