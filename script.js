@@ -1,32 +1,32 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const loginForm = document.getElementById('login-form');
-  const loginSection = document.getElementById('login-section');
-  const dashboard = document.getElementById('dashboard');
-  const briefcase = document.querySelector('.briefcase');
+const backendURL = "https://controle-kd5w.onrender.com"; // URL do Render
 
-  // Animação: boneco entra, maleta abre e formulário aparece
-  setTimeout(() => {
-    briefcase.classList.remove('closed');
-    briefcase.classList.add('open');
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    setTimeout(() => {
-      loginSection.style.display = 'block';
-    }, 1000);
-  }, 3000);
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
 
-  // Seu login original
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+  if (!username || !password) {
+    alert('Preencha todos os campos!');
+    return;
+  }
 
-    const username = loginForm.username.value.trim();
-    const password = loginForm.password.value.trim();
+  try {
+    const res = await fetch(`${backendURL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
 
-    const savedUser = JSON.parse(localStorage.getItem('userData'));
+    const data = await res.json();
 
-    if (savedUser && username === savedUser.username && password === savedUser.password) {
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
       window.location.href = 'dashboard.html';
     } else {
-      alert('Usuário ou senha incorretos!');
+      alert(data.message || 'Usuário ou senha incorretos!');
     }
-  });
+  } catch {
+    alert('Erro de conexão com servidor!');
+  }
 });
