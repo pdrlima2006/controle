@@ -3,31 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>📊 Painel de Controle</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; margin: 0; }
-    header { background: #003366; color: white; padding: 10px; border-radius: 6px; text-align: center; }
-    ul { list-style: none; padding: 0; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-    li { margin-bottom: 0; }
-    a { text-decoration: none; font-weight: bold; background: white; padding: 12px; display: block; border-radius: 6px; box-shadow: 0 0 4px rgba(0, 0, 0, 0.1); color: #003366; transition: background 0.2s; }
-    a:hover { background: #e6f0ff; }
-    .mensagem { margin-top: 50px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); text-align: center; font-size: 1.3rem; }
-    .mensagem span { font-size: 2rem; display: block; margin-bottom: 10px; }
-    .user { margin-top: 10px; font-size: 1rem; color: #fff; font-weight: bold; }
-    .logout-btn { margin-top: 10px; background: #cc0000; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-    .logout-btn:hover { background: #ff3333; }
-    @media (max-width: 600px) {
-      body { padding: 10px; }
-      a { font-size: 1rem; padding: 14px; }
-      .mensagem { font-size: 1.1rem; padding: 20px; }
-      .mensagem span { font-size: 1.6rem; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Verifica login -->
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+  </script>
+
   <header>
     <h1>📊 Painel de Controle</h1>
-    <div class="user" id="username">Usuário: --</div>
-    <button class="logout-btn" onclick="logout()">Sair</button>
+    <button onclick="localStorage.removeItem('token'); window.location.href='index.html';" style="float:right; margin-top:-40px;">Sair</button>
   </header>
 
   <ul>
@@ -42,39 +29,5 @@
     <span>👨‍💼</span>
     Aqui você faz seu <strong>Controle Financeiro</strong> de forma simples e prática!
   </div>
-
-  <script>
-    const backendURL = "https://controle-kd5w.onrender.com";
-
-    async function carregarUsuario() {
-      const token = localStorage.getItem("token");
-      if (!token) { window.location.href = "index.html"; return; }
-
-      try {
-        const res = await fetch(`${backendURL}/me`, {
-          headers: { "Authorization": "Bearer " + token }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById("username").innerText = "Usuário: " + (data.username || data.user?.username);
-        } else {
-          localStorage.removeItem("token");
-          window.location.href = "index.html";
-        }
-      } catch {
-        alert("Erro ao conectar ao servidor");
-        localStorage.removeItem("token");
-        window.location.href = "index.html";
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      window.location.href = "index.html";
-    }
-
-    carregarUsuario();
-  </script>
 </body>
 </html>
