@@ -1,6 +1,6 @@
-const backendURL = "https://controle-kd5w.onrender.com"; // URL do Render
+// script.js - sem backend
 
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+document.getElementById('login-form').addEventListener('submit', (e) => {
   e.preventDefault();
 
   const username = document.getElementById('username').value.trim();
@@ -11,22 +11,28 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     return;
   }
 
-  try {
-    const res = await fetch(`${backendURL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem('token', data.token);
-      window.location.href = 'dashboard.html';
-    } else {
-      alert(data.message || 'Usuário ou senha incorretos!');
-    }
-  } catch {
-    alert('Erro de conexão com servidor!');
+  // Login fake: usuário "admin" e senha "1234"
+  if (username === 'admin' && password === '1234') {
+    localStorage.setItem('token', 'fake-token'); // simula um token
+    localStorage.setItem('username', username); // opcional: salvar usuário
+    window.location.href = 'dashboard.html';
+  } else {
+    alert('Usuário ou senha incorretos!');
   }
 });
+
+// Função para proteger páginas (dashboard)
+export function checkLogin() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Você precisa fazer login!');
+    window.location.href = 'index.html';
+  }
+}
+
+// Função de logout
+export function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  window.location.href = 'index.html';
+}
