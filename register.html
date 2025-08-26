@@ -71,7 +71,6 @@
   <form id="registerForm">
     <h1>Cadastro</h1>
     <input type="text" name="username" placeholder="Usuário" required />
-    <input type="email" name="email" placeholder="E-mail" required />
     <input type="password" name="password" placeholder="Senha" required />
     <button type="submit">Cadastrar</button>
     <div id="mensagem"></div>
@@ -79,7 +78,6 @@
 
   <div class="link-buttons">
     <button onclick="window.location.href='index.html'">Voltar para login</button>
-    <button onclick="window.location.href='reset.html'">Esqueci a senha</button>
   </div>
 
   <script>
@@ -87,11 +85,10 @@
       e.preventDefault();
 
       const username = this.username.value.trim();
-      const email = this.email.value.trim();
       const password = this.password.value.trim();
 
-      if (username && email && password) {
-        localStorage.setItem('userData', JSON.stringify({ username, email, password }));
+      if (username && password) {
+        localStorage.setItem('userData', JSON.stringify({ username, password }));
         alert('Cadastro realizado com sucesso!');
         window.location.href = 'index.html';
       } else {
