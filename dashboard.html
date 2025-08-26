@@ -7,14 +7,21 @@
 </head>
 <body>
   <!-- Verifica login -->
-  <script>
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'index.html';
+  <script type="module">
+    // Importa funções de script.js
+    import { checkLogin, logout } from './script.js';
+    checkLogin(); // protege a página
+
+    // Configura botão de logout
+    window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    });
   </script>
 
   <header>
     <h1>📊 Painel de Controle</h1>
-    <button onclick="localStorage.removeItem('token'); window.location.href='index.html';" style="float:right; margin-top:-40px;">Sair</button>
+    <button id="logout-btn" style="float:right; margin-top:-40px;">Sair</button>
   </header>
 
   <ul>
