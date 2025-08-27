@@ -35,7 +35,7 @@
     }
 
     .campo {
-      flex: 1 1 200px;
+      flex: 1 1 180px;
       display: flex;
       flex-direction: column;
     }
@@ -45,10 +45,11 @@
       font-weight: bold;
     }
 
-    .campo input {
+    .campo input, .campo select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      font-size: 1rem;
     }
 
     button {
@@ -59,6 +60,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      font-size: 1rem;
     }
 
     button.deletar {
@@ -78,7 +80,7 @@
     }
 
     .cartao {
-      width: 300px;
+      width: 320px;
       background: linear-gradient(135deg, #673ab7, #512da8);
       color: white;
       border-radius: 15px;
@@ -129,17 +131,49 @@
       <div class="linha-campos">
         <div class="campo">
           <label for="nome">Nome do Cartão:</label>
-          <input type="text" id="nome" name="nome" required />
+          <input type="text" id="nome" name="nome" required placeholder="Ex: Inter, Nubank" />
         </div>
 
         <div class="campo">
-          <label for="limite">Limite:</label>
-          <input type="number" step="0.01" id="limite" name="limite" required />
+          <label for="banco">Banco:</label>
+          <select id="banco" name="banco" required>
+            <option value="">Selecione o banco</option>
+            <option value="Inter">Inter</option>
+            <option value="Nubank">Nubank</option>
+            <option value="Itaú">Itaú</option>
+            <option value="Bradesco">Bradesco</option>
+            <option value="Santander">Santander</option>
+            <option value="Banco do Brasil">Banco do Brasil</option>
+            <option value="Caixa">Caixa</option>
+            <option value="Outro">Outro</option>
+          </select>
         </div>
 
         <div class="campo">
-          <label for="fatura">Fatura Atual:</label>
-          <input type="number" step="0.01" id="fatura" name="fatura" required />
+          <label for="limite">Limite (R$):</label>
+          <input type="number" step="0.01" min="0" id="limite" name="limite" required />
+        </div>
+
+        <div class="campo">
+          <label for="fatura">Fatura Atual (R$):</label>
+          <input type="number" step="0.01" min="0" id="fatura" name="fatura" required />
+        </div>
+      </div>
+
+      <div class="linha-campos" style="margin-top: 15px;">
+        <div class="campo">
+          <label for="vencimento">Data de Vencimento:</label>
+          <input type="number" min="1" max="31" id="vencimento" name="vencimento" required placeholder="Dia do mês" />
+        </div>
+
+        <div class="campo">
+          <label for="melhorCompra">Melhor Dia de Compra:</label>
+          <input type="number" min="1" max="31" id="melhorCompra" name="melhorCompra" required placeholder="Dia do mês" />
+        </div>
+
+        <div class="campo">
+          <label for="mesAnoFatura">Mês/Ano da Fatura:</label>
+          <input type="month" id="mesAnoFatura" name="mesAnoFatura" required />
         </div>
       </div>
 
@@ -157,44 +191,69 @@
     const lista = document.getElementById('listaCartoes');
 
     function gerarNumeroCartao() {
-      const ultimos4 = Math.floor(1000 + Math.random() * 8999);
+      const ultimos4 = Math.floor(1000 + Math.random() * 9000);
       return '**** **** **** ' + ultimos4;
     }
 
-    function detectarBandeira(nome) {
+    // Detecta a bandeira conforme banco e nome do cartão
+    function detectarBandeira(nome, banco) {
       nome = nome.toLowerCase();
+      banco = banco.toLowerCase();
+
+      // Prioriza banco para determinar a bandeira
+      if (banco.includes('inter') || banco.includes('nubank')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
+      if (banco.includes('itaú') || banco.includes('bradesco') || banco.includes('santander') || banco.includes('banco do brasil')) return 'https://img.icons8.com/color/48/000000/visa.png';
+      if (banco.includes('caixa')) return 'https://img.icons8.com/color/48/000000/elo.png';
+
+      // Caso não ache pelo banco, tenta pelo nome
       if (nome.includes('visa')) return 'https://img.icons8.com/color/48/000000/visa.png';
       if (nome.includes('master')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       if (nome.includes('elo')) return 'https://logodownload.org/wp-content/uploads/2017/04/elo-logo-4.png';
+
+      // Padrão
       return 'https://img.icons8.com/ios-filled/50/ffffff/bank-card-back-side.png';
     }
 
+    // Formata valor em R$
+    function formatarReal(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Carrega os cartões e exibe
     function carregarCartoes() {
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       lista.innerHTML = '';
 
       cartoes.forEach((c, index) => {
-        const usado = parseFloat(c.fatura);
         const limite = parseFloat(c.limite);
-        const disponivel = (limite - usado).toFixed(2);
+        const fatura = parseFloat(c.fatura);
+        const disponivel = (limite - fatura).toFixed(2);
         const numero = gerarNumeroCartao();
-        const bandeira = detectarBandeira(c.nome);
+        const bandeira = detectarBandeira(c.nome, c.banco);
+
+        // Formatar mês/ano para exibir
+        const [ano, mes] = c.mesAnoFatura.split('-');
+        const dataFormatada = `${mes}/${ano}`;
 
         const div = document.createElement('div');
         div.className = 'cartao';
         div.innerHTML = `
           <img class="bandeira" src="${bandeira}" alt="Bandeira" />
           <div class="numero">${numero}</div>
-          <div class="nome">💳 ${c.nome}</div>
-          <div class="info">💰 Limite: R$ ${limite.toFixed(2)}</div>
-          <div class="info">📄 Fatura: R$ ${usado.toFixed(2)}</div>
-          <div class="info">✅ Disponível: R$ ${disponivel}</div>
+          <div class="nome">💳 ${c.nome} - ${c.banco}</div>
+          <div class="info">💰 Limite: ${formatarReal(limite)}</div>
+          <div class="info">📄 Fatura: ${formatarReal(fatura)}</div>
+          <div class="info">✅ Disponível: ${formatarReal(parseFloat(disponivel))}</div>
+          <div class="info">📅 Vencimento: Dia ${c.vencimento}</div>
+          <div class="info">🛒 Melhor dia compra: Dia ${c.melhorCompra}</div>
+          <div class="info">🗓️ Mês/Ano fatura: ${dataFormatada}</div>
           <button class="deletar" onclick="deletarCartao(${index})">🗑️ Deletar</button>
         `;
         lista.appendChild(div);
       });
     }
 
+    // Apaga cartão
     function deletarCartao(index) {
       let cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.splice(index, 1);
@@ -202,13 +261,25 @@
       carregarCartoes();
     }
 
+    // Salvar cartão
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const nome = form.nome.value;
+
+      const nome = form.nome.value.trim();
+      const banco = form.banco.value.trim();
       const limite = parseFloat(form.limite.value);
       const fatura = parseFloat(form.fatura.value);
+      const vencimento = form.vencimento.value.trim();
+      const melhorCompra = form.melhorCompra.value.trim();
+      const mesAnoFatura = form.mesAnoFatura.value;
 
-      const novoCartao = { nome, limite, fatura };
+      // Validar dias do mês
+      if (vencimento < 1 || vencimento > 31 || melhorCompra < 1 || melhorCompra > 31) {
+        alert("Digite um dia válido (1 a 31) para vencimento e melhor dia de compra.");
+        return;
+      }
+
+      const novoCartao = { nome, banco, limite, fatura, vencimento, melhorCompra, mesAnoFatura };
 
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.push(novoCartao);
@@ -217,6 +288,9 @@
       form.reset();
       carregarCartoes();
     });
+
+    // Expor a função deletar para o botão onclick inline funcionar
+    window.deletarCartao = deletarCartao;
 
     document.addEventListener('DOMContentLoaded', carregarCartoes);
   </script>
