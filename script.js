@@ -1,7 +1,7 @@
 // script.js - login e armazenamento no localStorage
 
 // Login
-document.getElementById('login-form').addEventListener('submit', (e) => {
+document.getElementById('login-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const username = document.getElementById('username').value.trim();
@@ -22,7 +22,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     // Salva token e usuário logado
     localStorage.setItem('token', 'fake-token');
     localStorage.setItem('username', username);
-    window.location.href = 'dashboard.html';
+    window.location.href = 'dashboard.html'; // painel
   } else {
     alert('Usuário ou senha incorretos!');
   }
@@ -33,7 +33,7 @@ export function checkLogin() {
   const token = localStorage.getItem('token');
   if (!token) {
     alert('Você precisa fazer login!');
-    window.location.href = 'index.html';
+    window.location.href = 'index.html'; // página de login
   }
 }
 
@@ -41,5 +41,5 @@ export function checkLogin() {
 export function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('username');
-  window.location.href = 'index.html';
+  window.location.href = 'index.html'; // redireciona para login ao sair
 }
