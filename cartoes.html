@@ -130,8 +130,17 @@
     <form id="cartaoForm">
       <div class="linha-campos">
         <div class="campo">
-          <label for="nome">Nome do Cartão:</label>
-          <input type="text" id="nome" name="nome" required placeholder="Ex: Inter, Nubank" />
+          <label for="numeroCartao">Número do Cartão:</label>
+          <input 
+            type="text" 
+            id="numeroCartao" 
+            name="numeroCartao" 
+            required 
+            placeholder="Ex: 1234 5678 9012 3456" 
+            maxlength="19" 
+            pattern="[\d ]{13,19}" 
+            title="Digite o número do cartão (13 a 19 dígitos, pode incluir espaços)" 
+          />
         </div>
 
         <div class="campo">
@@ -190,25 +199,29 @@
     const form = document.getElementById('cartaoForm');
     const lista = document.getElementById('listaCartoes');
 
-    function gerarNumeroCartao() {
-      const ultimos4 = Math.floor(1000 + Math.random() * 9000);
+    // Máscara para exibir número do cartão (mostra só últimos 4 dígitos, o resto como ****)
+    function formatarNumeroCartao(numero) {
+      // Remove espaços e caracteres não numéricos
+      const numLimpo = numero.replace(/\D/g, '');
+      if (numLimpo.length < 4) return numero; // se número muito curto, retorna original
+      
+      // Exibir como: **** **** **** 1234
+      const ultimos4 = numLimpo.slice(-4);
       return '**** **** **** ' + ultimos4;
     }
 
-    // Detecta a bandeira conforme banco e nome do cartão
-    function detectarBandeira(nome, banco) {
-      nome = nome.toLowerCase();
+    // Detecta a bandeira conforme banco e número do cartão
+    function detectarBandeira(numero, banco) {
       banco = banco.toLowerCase();
 
-      // Prioriza banco para determinar a bandeira
+      // Usando banco para definir bandeira, como antes
       if (banco.includes('inter') || banco.includes('nubank')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       if (banco.includes('itaú') || banco.includes('bradesco') || banco.includes('santander') || banco.includes('banco do brasil')) return 'https://img.icons8.com/color/48/000000/visa.png';
       if (banco.includes('caixa')) return 'https://img.icons8.com/color/48/000000/elo.png';
 
-      // Caso não ache pelo banco, tenta pelo nome
-      if (nome.includes('visa')) return 'https://img.icons8.com/color/48/000000/visa.png';
-      if (nome.includes('master')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
-      if (nome.includes('elo')) return 'https://logodownload.org/wp-content/uploads/2017/04/elo-logo-4.png';
+      // Caso não ache pelo banco, tenta pelo número (exemplo simples, pode melhorar)
+      if (numero.startsWith('4')) return 'https://img.icons8.com/color/48/000000/visa.png'; // Visa geralmente começa com 4
+      if (numero.startsWith('5')) return 'https://img.icons8.com/color/48/000000/mastercard.png'; // Mastercard geralmente começa com 5
 
       // Padrão
       return 'https://img.icons8.com/ios-filled/50/ffffff/bank-card-back-side.png';
@@ -228,8 +241,8 @@
         const limite = parseFloat(c.limite);
         const fatura = parseFloat(c.fatura);
         const disponivel = (limite - fatura).toFixed(2);
-        const numero = gerarNumeroCartao();
-        const bandeira = detectarBandeira(c.nome, c.banco);
+        const numeroFormatado = formatarNumeroCartao(c.numeroCartao);
+        const bandeira = detectarBandeira(c.numeroCartao, c.banco);
 
         // Formatar mês/ano para exibir
         const [ano, mes] = c.mesAnoFatura.split('-');
@@ -239,8 +252,8 @@
         div.className = 'cartao';
         div.innerHTML = `
           <img class="bandeira" src="${bandeira}" alt="Bandeira" />
-          <div class="numero">${numero}</div>
-          <div class="nome">💳 ${c.nome} - ${c.banco}</div>
+          <div class="numero">${numeroFormatado}</div>
+          <div class="nome">💳 ${c.banco}</div>
           <div class="info">💰 Limite: ${formatarReal(limite)}</div>
           <div class="info">📄 Fatura: ${formatarReal(fatura)}</div>
           <div class="info">✅ Disponível: ${formatarReal(parseFloat(disponivel))}</div>
@@ -265,7 +278,7 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const nome = form.nome.value.trim();
+      const numeroCartao = form.numeroCartao.value.trim();
       const banco = form.banco.value.trim();
       const limite = parseFloat(form.limite.value);
       const fatura = parseFloat(form.fatura.value);
@@ -279,7 +292,14 @@
         return;
       }
 
-      const novoCartao = { nome, banco, limite, fatura, vencimento, melhorCompra, mesAnoFatura };
+      // Validar número do cartão simples (mínimo 13 dígitos)
+      const numLimpo = numeroCartao.replace(/\D/g, '');
+      if (numLimpo.length < 13 || numLimpo.length > 19) {
+        alert("Número do cartão inválido. Deve conter entre 13 e 19 dígitos.");
+        return;
+      }
+
+      const novoCartao = { numeroCartao, banco, limite, fatura, vencimento, melhorCompra, mesAnoFatura };
 
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.push(novoCartao);
