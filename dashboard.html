@@ -16,26 +16,12 @@
       background: #003366;
       color: white;
       padding: 20px 15px;
-      position: relative;
       text-align: center;
     }
 
     header h1 {
       margin: 0;
       font-size: 24px;
-    }
-
-    #logout-btn {
-      position: absolute;
-      right: 15px;
-      top: 20px;
-      padding: 6px 12px;
-      background: #ff4d4d;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
     }
 
     ul {
@@ -45,7 +31,7 @@
       list-style: none;
       padding: 20px;
       margin: 0;
-      gap: 15px;
+      gap: 10px; /* diminui o espaço entre os itens */
     }
 
     ul li {
@@ -58,7 +44,7 @@
       background: #007acc;
       color: white;
       text-decoration: none;
-      padding: 20px;
+      padding: 15px; /* reduz um pouco o tamanho do botão */
       border-radius: 10px;
       text-align: center;
       font-weight: bold;
@@ -71,14 +57,28 @@
 
     .mensagem {
       text-align: center;
-      margin: 40px 20px 20px;
+      margin: 20px;
       font-size: 18px;
+    }
+
+    #logout-btn {
+      display: block;
+      margin: 20px auto; /* centraliza abaixo da lista */
+      padding: 10px 20px;
+      background: #ff4d4d;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      max-width: 200px;
+      text-align: center;
     }
 
     @media (max-width: 600px) {
       ul {
         flex-direction: column;
-        gap: 10px;
+        gap: 5px; /* diminui ainda mais o espaço entre os botões no celular */
       }
 
       ul li {
@@ -86,8 +86,8 @@
       }
 
       #logout-btn {
-        top: 10px;
-        padding: 5px 10px;
+        width: 90%;
+        margin-bottom: 20px;
       }
     }
   </style>
@@ -106,7 +106,6 @@
 
   <header>
     <h1>📊 Painel de Controle</h1>
-    <button id="logout-btn">Sair</button>
   </header>
 
   <ul>
@@ -116,6 +115,8 @@
     <li><a href="investimentos.html">🏦 Investimentos</a></li>
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
+
+  <button id="logout-btn">Sair</button>
 
   <div class="mensagem">
     <span>👨‍💼</span>
