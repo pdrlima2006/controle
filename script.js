@@ -1,5 +1,6 @@
 // script.js - login e armazenamento no localStorage
 
+// Login
 document.getElementById('login-form').addEventListener('submit', (e) => {
   e.preventDefault();
 
@@ -11,13 +12,17 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     return;
   }
 
-  // Login fake: apenas para exemplo
-  // Usuário padrão: admin / senha: 1234
-  if (username === 'admin' && password === '1234') {
-    // Salva no localStorage
-    localStorage.setItem('token', 'fake-token'); // simula token
-    localStorage.setItem('username', username);  // salva usuário
-    window.location.href = 'dashboard.html';     // redireciona
+  // Pega usuários cadastrados do localStorage
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+
+  // Procura usuário cadastrado
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+
+  if (user) {
+    // Salva token e usuário logado
+    localStorage.setItem('token', 'fake-token');
+    localStorage.setItem('username', username);
+    window.location.href = 'dashboard.html';
   } else {
     alert('Usuário ou senha incorretos!');
   }
