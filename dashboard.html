@@ -35,11 +35,11 @@
     ul {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
+      justify-content: center; /* centraliza os botões */
       list-style: none;
       padding: 20px;
       margin: 0;
-      gap: 10px; /* diminui o espaço entre os itens */
+      gap: 20px; /* espaçamento normal no desktop */
     }
 
     ul li {
@@ -52,7 +52,7 @@
       background: #007acc;
       color: white;
       text-decoration: none;
-      padding: 15px; /* reduz um pouco o tamanho do botão */
+      padding: 15px;
       border-radius: 10px;
       text-align: center;
       font-weight: bold;
@@ -65,7 +65,7 @@
 
     #logout-btn {
       display: block;
-      margin: 20px auto; /* centraliza abaixo da lista */
+      margin: 20px auto;
       padding: 10px 20px;
       background: #ff4d4d;
       border: none;
@@ -83,10 +83,11 @@
       font-size: 18px;
     }
 
+    /* Ajustes para celular */
     @media (max-width: 600px) {
       ul {
         flex-direction: column;
-        gap: 5px; /* diminui ainda mais o espaço entre os botões no celular */
+        gap: 5px; /* espaço menor entre os botões */
       }
 
       ul li {
@@ -106,7 +107,7 @@
     import { checkLogin, logout } from './script.js';
     checkLogin();
 
-    window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) logoutBtn.addEventListener('click', logout);
     });
