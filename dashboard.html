@@ -105,7 +105,7 @@
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
 
-  <!-- Botão Sair sem onclick -->
+  <!-- Botão Sair -->
   <button id="logout-btn">Sair</button>
 
   <div class="mensagem">
@@ -117,10 +117,16 @@
   <script type="module">
     import { checkLogin, logout } from './script.js';
 
+    // Executa verificação de login
     checkLogin();
 
-    // Liga o botão ao logout
-    document.getElementById('logout-btn').addEventListener('click', logout);
+    // Aguarda DOM carregar antes de adicionar o evento ao botão
+    window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+      }
+    });
   </script>
 </body>
 </html>
