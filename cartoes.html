@@ -11,7 +11,6 @@
       padding: 20px;
       margin: 0;
     }
-
     header {
       background-color: #4a148c;
       color: white;
@@ -19,7 +18,6 @@
       border-radius: 8px;
       text-align: center;
     }
-
     form {
       background: white;
       padding: 20px;
@@ -27,31 +25,26 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-
     .linha-campos {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
     }
-
     .campo {
       flex: 1 1 180px;
       display: flex;
       flex-direction: column;
     }
-
     .campo label {
       margin-bottom: 5px;
       font-weight: bold;
     }
-
     .campo input, .campo select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 1rem;
     }
-
     button {
       margin-top: 15px;
       padding: 10px;
@@ -62,23 +55,19 @@
       cursor: pointer;
       font-size: 1rem;
     }
-
     button.deletar {
       background: #d32f2f;
       margin-top: 10px;
     }
-
     a {
       display: inline-block;
       margin-top: 20px;
       color: #4a148c;
       text-decoration: none;
     }
-
     h2 {
       margin-top: 40px;
     }
-
     .cartao {
       width: 320px;
       background: linear-gradient(135deg, #673ab7, #512da8);
@@ -90,30 +79,25 @@
       position: relative;
       font-family: 'Courier New', Courier, monospace;
     }
-
     .cartao .bandeira {
       position: absolute;
       top: 15px;
       right: 20px;
       width: 60px;
     }
-
     .cartao .numero {
       margin-top: 40px;
       font-size: 18px;
       letter-spacing: 2px;
     }
-
     .cartao .nome {
       margin-top: 10px;
       font-size: 16px;
     }
-
     .cartao .info {
       margin-top: 10px;
       font-size: 14px;
     }
-
     #listaCartoes {
       display: flex;
       flex-wrap: wrap;
@@ -201,7 +185,7 @@
     // Máscara automática do número do cartão
     numeroInput.addEventListener('input', () => {
       let value = numeroInput.value.replace(/\D/g, '');
-      value = value.replace(/(.{4})/g, '$1 ').trim();
+      value = value.match(/.{1,4}/g)?.join(' ') || '';
       numeroInput.value = value;
     });
 
