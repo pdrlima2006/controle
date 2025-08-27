@@ -138,8 +138,6 @@
             required 
             placeholder="Ex: 1234 5678 9012 3456" 
             maxlength="19" 
-            pattern="[\d ]{13,19}" 
-            title="Digite o número do cartão (13 a 19 dígitos, pode incluir espaços)" 
           />
         </div>
 
@@ -198,56 +196,47 @@
   <script>
     const form = document.getElementById('cartaoForm');
     const lista = document.getElementById('listaCartoes');
+    const numeroInput = document.getElementById('numeroCartao');
 
-    // Máscara para exibir número do cartão (mostra só últimos 4 dígitos, o resto como ****)
+    // Máscara automática do número do cartão
+    numeroInput.addEventListener('input', () => {
+      let value = numeroInput.value.replace(/\D/g, '');
+      value = value.replace(/(.{4})/g, '$1 ').trim();
+      numeroInput.value = value;
+    });
+
     function formatarNumeroCartao(numero) {
-      // Remove espaços e caracteres não numéricos
       const numLimpo = numero.replace(/\D/g, '');
-      if (numLimpo.length < 4) return numero; // se número muito curto, retorna original
-      
-      // Exibir como: **** **** **** 1234
+      if (numLimpo.length < 4) return numero;
       const ultimos4 = numLimpo.slice(-4);
       return '**** **** **** ' + ultimos4;
     }
 
-    // Detecta a bandeira conforme banco e número do cartão
     function detectarBandeira(numero, banco) {
       banco = banco.toLowerCase();
-
-      // Usando banco para definir bandeira, como antes
       if (banco.includes('inter') || banco.includes('nubank')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       if (banco.includes('itaú') || banco.includes('bradesco') || banco.includes('santander') || banco.includes('banco do brasil')) return 'https://img.icons8.com/color/48/000000/visa.png';
       if (banco.includes('caixa')) return 'https://img.icons8.com/color/48/000000/elo.png';
-
-      // Caso não ache pelo banco, tenta pelo número (exemplo simples, pode melhorar)
-      if (numero.startsWith('4')) return 'https://img.icons8.com/color/48/000000/visa.png'; // Visa geralmente começa com 4
-      if (numero.startsWith('5')) return 'https://img.icons8.com/color/48/000000/mastercard.png'; // Mastercard geralmente começa com 5
-
-      // Padrão
+      if (numero.startsWith('4')) return 'https://img.icons8.com/color/48/000000/visa.png';
+      if (numero.startsWith('5')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       return 'https://img.icons8.com/ios-filled/50/ffffff/bank-card-back-side.png';
     }
 
-    // Formata valor em R$
     function formatarReal(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Carrega os cartões e exibe
     function carregarCartoes() {
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       lista.innerHTML = '';
-
       cartoes.forEach((c, index) => {
         const limite = parseFloat(c.limite);
         const fatura = parseFloat(c.fatura);
         const disponivel = (limite - fatura).toFixed(2);
         const numeroFormatado = formatarNumeroCartao(c.numeroCartao);
         const bandeira = detectarBandeira(c.numeroCartao, c.banco);
-
-        // Formatar mês/ano para exibir
         const [ano, mes] = c.mesAnoFatura.split('-');
         const dataFormatada = `${mes}/${ano}`;
-
         const div = document.createElement('div');
         div.className = 'cartao';
         div.innerHTML = `
@@ -266,7 +255,6 @@
       });
     }
 
-    // Apaga cartão
     function deletarCartao(index) {
       let cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.splice(index, 1);
@@ -274,10 +262,8 @@
       carregarCartoes();
     }
 
-    // Salvar cartão
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-
       const numeroCartao = form.numeroCartao.value.trim();
       const banco = form.banco.value.trim();
       const limite = parseFloat(form.limite.value);
@@ -286,21 +272,18 @@
       const melhorCompra = form.melhorCompra.value.trim();
       const mesAnoFatura = form.mesAnoFatura.value;
 
-      // Validar dias do mês
-      if (vencimento < 1 || vencimento > 31 || melhorCompra < 1 || melhorCompra > 31) {
-        alert("Digite um dia válido (1 a 31) para vencimento e melhor dia de compra.");
-        return;
-      }
-
-      // Validar número do cartão simples (mínimo 13 dígitos)
       const numLimpo = numeroCartao.replace(/\D/g, '');
       if (numLimpo.length < 13 || numLimpo.length > 19) {
         alert("Número do cartão inválido. Deve conter entre 13 e 19 dígitos.");
         return;
       }
 
-      const novoCartao = { numeroCartao, banco, limite, fatura, vencimento, melhorCompra, mesAnoFatura };
+      if (vencimento < 1 || vencimento > 31 || melhorCompra < 1 || melhorCompra > 31) {
+        alert("Digite um dia válido (1 a 31) para vencimento e melhor dia de compra.");
+        return;
+      }
 
+      const novoCartao = { numeroCartao, banco, limite, fatura, vencimento, melhorCompra, mesAnoFatura };
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       cartoes.push(novoCartao);
       localStorage.setItem('cartoes', JSON.stringify(cartoes));
@@ -309,9 +292,7 @@
       carregarCartoes();
     });
 
-    // Expor a função deletar para o botão onclick inline funcionar
     window.deletarCartao = deletarCartao;
-
     document.addEventListener('DOMContentLoaded', carregarCartoes);
   </script>
 </body>
