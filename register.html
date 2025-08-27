@@ -8,8 +8,8 @@
 <body>
   <form id="registerForm">
     <h1>Cadastro</h1>
-    <input type="text" name="username" placeholder="Usuário" required />
-    <input type="password" name="password" placeholder="Senha" required />
+    <input type="text" id="username" placeholder="Usuário" required />
+    <input type="password" id="password" placeholder="Senha" required />
     <button type="submit">Cadastrar</button>
     <div id="mensagem" style="color:red; margin-top:10px;"></div>
   </form>
@@ -18,29 +18,26 @@
     <button onclick="window.location.href='index.html'">Voltar para login</button>
   </div>
 
-  <script type="module">
-    import { logout } from './script.js';
-
+  <script>
     const registerForm = document.getElementById('registerForm');
     const mensagem = document.getElementById('mensagem');
 
     registerForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const username = registerForm.username.value.trim();
-      const password = registerForm.password.value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
 
       if (!username || !password) {
         mensagem.innerText = "Preencha todos os campos!";
         return;
       }
 
-      // Pega usuários cadastrados do localStorage
+      // Pega usuários cadastrados
       const users = JSON.parse(localStorage.getItem('users')) || [];
 
       // Verifica se usuário já existe
-      const exists = users.find(u => u.username === username);
-      if (exists) {
+      if (users.find(u => u.username === username)) {
         mensagem.innerText = "Usuário já cadastrado!";
         return;
       }
@@ -48,6 +45,10 @@
       // Adiciona novo usuário
       users.push({ username, password });
       localStorage.setItem('users', JSON.stringify(users));
+
+      // Cria token fake e salva usuário logado
+      localStorage.setItem('token', 'fake-token');
+      localStorage.setItem('username', username);
 
       // Feedback e redirecionamento
       alert("Cadastro realizado com sucesso!");
