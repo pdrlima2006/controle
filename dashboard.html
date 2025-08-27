@@ -6,113 +6,24 @@
   <title>📊 Painel de Controle</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
-
-    header {
-      background: #003366;
-      color: white;
-      padding: 20px 15px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .welcome-msg {
-      text-align: center;
-      margin: 15px 0;
-      font-size: 18px;
-      font-weight: bold;
-      color: #003366;
-    }
-
-    ul {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      list-style: none;
-      padding: 20px;
-      margin: 0;
-      gap: 20px; /* espaçamento normal no desktop */
-    }
-
-    ul li {
-      flex: 1 1 150px;
-      max-width: 200px;
-    }
-
-    ul li a {
-      display: block;
-      background: #007acc;
-      color: white;
-      text-decoration: none;
-      padding: 15px;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-
-    ul li a:hover {
-      background: #005999;
-    }
-
-    #logout-btn {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 20px;
-      background: #ff4d4d;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      max-width: 200px;
-      text-align: center;
-    }
-
-    .mensagem {
-      text-align: center;
-      margin: 20px;
-      font-size: 18px;
-    }
-
-    /* Ajustes para celular */
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; }
+    header { background: #003366; color: white; padding: 20px 15px; text-align: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    .welcome-msg { text-align: center; margin: 15px 0; font-size: 18px; font-weight: bold; color: #003366; }
+    ul { display: flex; flex-wrap: wrap; justify-content: center; list-style: none; padding: 20px; margin: 0; gap: 20px; }
+    ul li { flex: 1 1 150px; max-width: 200px; }
+    ul li a { display: block; background: #007acc; color: white; text-decoration: none; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; transition: background 0.3s; }
+    ul li a:hover { background: #005999; }
+    #logout-btn { display: block; margin: 20px auto; padding: 10px 20px; background: #ff4d4d; border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; max-width: 200px; text-align: center; }
+    .mensagem { text-align: center; margin: 20px; font-size: 18px; }
     @media (max-width: 600px) {
-      ul {
-        flex-direction: column;
-        gap: 5px; /* espaço menor entre os botões no celular */
-      }
-
-      ul li {
-        max-width: 100%;
-      }
-
-      #logout-btn {
-        width: 90%;
-        margin-bottom: 20px;
-      }
+      ul { flex-direction: column; gap: 5px; }
+      ul li { max-width: 100%; }
+      #logout-btn { width: 90%; margin-bottom: 20px; }
     }
   </style>
 </head>
 <body>
-  <!-- Verifica login -->
-  <script type="module">
-    import { checkLogin, logout } from './script.js';
-    checkLogin();
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) logoutBtn.addEventListener('click', logout);
-    });
-  </script>
-
   <header>
     <h1>📊 Painel de Controle</h1>
   </header>
@@ -129,11 +40,18 @@
     <li><a href="extrato.html">📄 Extrato Geral</a></li>
   </ul>
 
-  <button id="logout-btn">Sair</button>
+  <!-- Botão Sair chama logout() diretamente -->
+  <button id="logout-btn" onclick="logout()">Sair</button>
 
   <div class="mensagem">
     <span>👨‍💼</span>
     <p>Aqui você faz seu <strong>Controle Financeiro</strong> de forma simples e prática!</p>
   </div>
+
+  <script type="module">
+    import { checkLogin, logout } from './script.js';
+    checkLogin();
+    window.logout = logout; // expõe a função logout para onclick funcionar
+  </script>
 </body>
 </html>
