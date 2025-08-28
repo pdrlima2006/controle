@@ -190,6 +190,7 @@
     });
 
     function formatarNumeroCartao(numero) {
+      if (!numero) return '**** **** **** ****';
       const numLimpo = numero.replace(/\D/g, '');
       if (numLimpo.length < 4) return numero;
       const ultimos4 = numLimpo.slice(-4);
@@ -201,8 +202,8 @@
       if (banco.includes('inter') || banco.includes('nubank')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       if (banco.includes('itaú') || banco.includes('bradesco') || banco.includes('santander') || banco.includes('banco do brasil')) return 'https://img.icons8.com/color/48/000000/visa.png';
       if (banco.includes('caixa')) return 'https://img.icons8.com/color/48/000000/elo.png';
-      if (numero.startsWith('4')) return 'https://img.icons8.com/color/48/000000/visa.png';
-      if (numero.startsWith('5')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
+      if (numero && numero.startsWith('4')) return 'https://img.icons8.com/color/48/000000/visa.png';
+      if (numero && numero.startsWith('5')) return 'https://img.icons8.com/color/48/000000/mastercard.png';
       return 'https://img.icons8.com/ios-filled/50/ffffff/bank-card-back-side.png';
     }
 
@@ -214,6 +215,8 @@
       const cartoes = JSON.parse(localStorage.getItem('cartoes')) || [];
       lista.innerHTML = '';
       cartoes.forEach((c, index) => {
+        if (!c.numeroCartao || !c.banco) return; // Ignora dados corrompidos
+
         const limite = parseFloat(c.limite);
         const fatura = parseFloat(c.fatura);
         const disponivel = (limite - fatura).toFixed(2);
@@ -252,9 +255,14 @@
       const banco = form.banco.value.trim();
       const limite = parseFloat(form.limite.value);
       const fatura = parseFloat(form.fatura.value);
-      const vencimento = form.vencimento.value.trim();
-      const melhorCompra = form.melhorCompra.value.trim();
+      const vencimento = parseInt(form.vencimento.value.trim());
+      const melhorCompra = parseInt(form.melhorCompra.value.trim());
       const mesAnoFatura = form.mesAnoFatura.value;
+
+      if (!numeroCartao || !banco || isNaN(limite) || isNaN(fatura) || !mesAnoFatura) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+      }
 
       const numLimpo = numeroCartao.replace(/\D/g, '');
       if (numLimpo.length < 13 || numLimpo.length > 19) {
