@@ -135,6 +135,11 @@
         <input type="text" name="valor" id="valor" required />
       </div>
 
+      <div class="form-group">
+        <label for="data">Data:</label>
+        <input type="date" name="data" id="data" required />
+      </div>
+
       <button type="submit">Salvar</button>
     </form>
 
@@ -145,6 +150,7 @@
           <th>Instituição</th>
           <th>Tipo</th>
           <th>Valor</th>
+          <th>Data</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -184,6 +190,7 @@
           <td>${invest.banco}</td>
           <td>${invest.tipo}</td>
           <td>R$ ${invest.valor.toFixed(2).replace(".", ",")}</td>
+          <td>${invest.data || '-'}</td>
         `;
         tabelaBody.appendChild(tr);
       });
@@ -196,14 +203,14 @@
 
       const banco = form.elements['banco'].value.trim();
       const tipo = form.elements['tipo'].value.trim();
+      const data = form.elements['data'].value;
 
-      // Troca solicitada aqui:
       const valorStr = form.elements['valor'].value.replace(/\D/g, "");
       const valor = parseFloat(valorStr) / 100;
 
-      if (!banco || !tipo || isNaN(valor)) return;
+      if (!banco || !tipo || isNaN(valor) || !data) return;
 
-      const novo = { banco, tipo, valor };
+      const novo = { banco, tipo, valor, data };
       investimentos.push(novo);
       localStorage.setItem('investimentos', JSON.stringify(investimentos));
 
