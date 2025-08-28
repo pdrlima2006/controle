@@ -5,79 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Extrato Geral</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #003366;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #003366;
-      color: white;
-    }
-
-    .positivo {
-      color: green;
-    }
-
-    .negativo {
-      color: red;
-    }
-
-    .back {
-      margin-top: 20px;
-    }
-
-    .back a {
-      text-decoration: none;
-      color: #003366;
-      font-weight: bold;
-    }
-
-    .filtro {
-      margin: 20px 0;
-    }
-
-    .filtro label {
-      font-weight: bold;
-      margin-right: 10px;
-    }
-
-    input[type="month"] {
-      padding: 8px;
-      font-size: 1rem;
-    }
-
-    button {
-      padding: 8px 16px;
-      margin-left: 10px;
-      background-color: #003366;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #002244;
-    }
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+    h1 { color: #003366; }
+    .filtro { margin: 20px 0; }
+    .filtro label { font-weight: bold; margin-right: 10px; }
+    input[type="month"] { padding: 8px; font-size: 1rem; }
+    button { padding: 8px 16px; margin-left: 10px; background-color: #003366; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 5px rgba(0,0,0,0.1); margin-top: 10px; }
+    th, td { padding: 12px; text-align: center; border: 1px solid #ddd; }
+    th { background-color: #003366; color: white; }
+    .positivo { color: green; }
+    .negativo { color: red; }
+    .back { margin-top: 20px; }
+    .back a { text-decoration: none; color: #003366; font-weight: bold; }    
   </style>
 </head>
 <body>
@@ -99,9 +39,7 @@
         <th>Disponível</th>
       </tr>
     </thead>
-    <tbody id="extrato-body">
-      <!-- Conteúdo gerado dinamicamente -->
-    </tbody>
+    <tbody id="extrato-body"></tbody>
   </table>
 
   <div class="back">
@@ -110,61 +48,46 @@
 
   <script>
     function formatarReal(valor) {
-      return valor.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      });
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     function calcularSaldoDoMes(ano, mes) {
       const transacoes = JSON.parse(localStorage.getItem("transacoes")) || [];
-      const filtradas = transacoes.filter(t => {
-        const [anoT, mesT] = t.data.split("-");
-        return anoT === ano && mesT === mes;
-      });
-
-      const entradas = filtradas
-        .filter(t => t.tipo === 'entrada')
-        .reduce((soma, t) => soma + parseFloat(t.valor), 0);
-
-      const saidas = filtradas
-        .filter(t => t.tipo === 'saida')
-        .reduce((soma, t) => soma + parseFloat(t.valor), 0);
-
-      return entradas - saidas;
+      return transacoes
+        .filter(t => { const [a,m] = t.data.split("-"); return a === ano && m === mes; })
+        .reduce((acc, t) => acc + (t.tipo === 'entrada' ? +t.valor : -t.valor), 0);
     }
 
-    function obterInvestimentos() {
+    function obterInvestimentosDoMes(ano, mes) {
       const investimentos = JSON.parse(localStorage.getItem("investimentos")) || [];
-      return investimentos.reduce((soma, i) => soma + parseFloat(i.valor), 0);
+      return investimentos
+        .filter(i => {
+          if (!i.data) return false;
+          const [a,m] = i.data.split("-");
+          return a === ano && m === mes;
+        })
+        .reduce((acc, i) => acc + +i.valor, 0);
     }
 
     function calcularFaturaDoMes(ano, mes) {
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
-
-      const faturasMes = cartoes
-        .filter(c => c.mesAnoFatura === `${ano}-${mes}`)
-        .reduce((total, c) => total + parseFloat(c.fatura), 0);
-
-      return faturasMes;
+      return cartoes.reduce((total, c) => {
+        if (!c.faturas || !Array.isArray(c.faturas)) return total;
+        return total + c.faturas
+          .filter(f => f.mesAno === `${ano}-${mes}`)
+          .reduce((sum, f) => sum + +f.valor, 0);
+      }, 0);
     }
 
     function carregarExtrato() {
-      const input = document.getElementById("mesAno");
-      const valorSelecionado = input.value;
+      const mesAno = document.getElementById("mesAno").value;
+      if (!mesAno) return alert("Selecione um mês/ano.");
 
-      if (!valorSelecionado) {
-        alert("Por favor, selecione um mês/ano.");
-        return;
-      }
-
-      const [ano, mes] = valorSelecionado.split("-");
-
+      const [ano, mes] = mesAno.split("-");
       const saldo = calcularSaldoDoMes(ano, mes);
-      const investimento = obterInvestimentos();
+      const investimento = obterInvestimentosDoMes(ano, mes);
       const fatura = calcularFaturaDoMes(ano, mes);
       const disponivel = saldo + investimento - fatura;
-
       const classe = disponivel >= 0 ? "positivo" : "negativo";
 
       document.getElementById("extrato-body").innerHTML = `
@@ -177,5 +100,6 @@
       `;
     }
   </script>
+
 </body>
 </html>
