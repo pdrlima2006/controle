@@ -1,181 +1,407 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Extrato Geral</title>
+  <title>💸 Entradas e Saídas</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      background: #f9f9f9;
       padding: 20px;
     }
-
-    h1 {
-      color: #003366;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border: 1px solid #ddd;
-    }
-
-    th {
+    header {
       background-color: #003366;
       color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
     }
-
-    .positivo {
-      color: green;
-    }
-
-    .negativo {
-      color: red;
-    }
-
-    .back {
+    form, .filtros {
+      background: white;
+      padding: 20px;
       margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-
-    .back a {
-      text-decoration: none;
-      color: #003366;
-      font-weight: bold;
+    .linha-campos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
     }
-
-    .filtro {
-      margin: 20px 0;
+    .campo {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
     }
-
-    .filtro label {
-      font-weight: bold;
-      margin-right: 10px;
-    }
-
-    input[type="month"] {
+    .campo input,
+    .campo select {
       padding: 8px;
-      font-size: 1rem;
+      font-size: 14px;
     }
-
     button {
-      padding: 8px 16px;
-      margin-left: 10px;
-      background-color: #003366;
+      padding: 10px;
+      background: #003366;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button.deletar {
+      background: #d32f2f;
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #003366;
+      text-decoration: none;
+    }
+    ul {
+      margin-top: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      list-style: none;
+    }
+    li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    li label {
+      flex-grow: 1;
       cursor: pointer;
     }
-
-    button:hover {
-      background-color: #002244;
+    canvas {
+      margin-top: 30px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    #saldoDoMes {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .acoes-deletar {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
+  <header><h1>💸 Entradas e Saídas</h1></header>
 
-  <h1>📄 Extrato Geral</h1>
+  <main>
+    <form id="transacaoForm">
+      <div class="linha-campos">
+        <div class="campo">
+          <label>Tipo:</label>
+          <select name="tipo" required>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
 
-  <div class="filtro">
-    <label for="mesAno">Selecione o mês/ano:</label>
-    <input type="month" id="mesAno" />
-    <button onclick="carregarExtrato()">Gerar Extrato</button>
-  </div>
+        <div class="campo">
+          <label>Valor:</label>
+          <input type="number" name="valor" step="0.01" required />
+        </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Saldo</th>
-        <th>Investimento</th>
-        <th>Fatura</th>
-        <th>Disponível</th>
-      </tr>
-    </thead>
-    <tbody id="extrato-body">
-      <!-- Conteúdo gerado dinamicamente -->
-    </tbody>
-  </table>
+        <div class="campo">
+          <label>Descrição:</label>
+          <input type="text" name="descricao" required />
+        </div>
 
-  <div class="back">
+        <div class="campo">
+          <label>Data:</label>
+          <input type="date" name="data" required />
+        </div>
+
+        <div class="campo" style="flex: 1 1 100%;">
+          <label>Anexar Nota Fiscal (opcional):</label>
+          <input type="file" name="notaFiscal" accept=".pdf,.jpg,.jpeg,.png" />
+        </div>
+      </div>
+
+      <button type="submit">Salvar</button>
+    </form>
+
     <a href="dashboard.html">← Voltar ao Painel</a>
-  </div>
+
+    <div class="filtros">
+      <h2>📅 Filtrar por Mês</h2>
+      <label for="filtroMes">Selecione o mês:</label>
+      <input type="month" id="filtroMes" />
+      <button type="button" onclick="filtrarPorMes()">Atualizar Gráfico</button>
+      <button type="button" onclick="gerarPdfDoMes()">Gerar PDF do Mês</button>
+      <button type="button" onclick="mostrarSaldoMes()">Ver Saldo do Mês</button>
+      <p id="saldoDoMes"></p>
+    </div>
+
+    <h2>📋 Histórico</h2>
+    
+    <div class="acoes-deletar">
+      <button class="deletar" onclick="deletarSelecionados()">Deletar Selecionados</button>
+      <button class="deletar" onclick="deletarTodos()">Deletar Tudo</button>
+    </div>
+
+    <ul id="listaTransacoes"></ul>
+
+    <h2>📊 Gráfico de Entradas e Saídas do Mês</h2>
+    <canvas id="graficoEntradasSaidas" width="400" height="400"></canvas>
+  </main>
 
   <script>
-    function formatarReal(valor) {
-      return valor.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
+    const form = document.getElementById('transacaoForm');
+    const lista = document.getElementById('listaTransacoes');
+    const inputFiltroMes = document.getElementById('filtroMes');
+    const canvas = document.getElementById('graficoEntradasSaidas');
+    const saldoMesEl = document.getElementById('saldoDoMes');
+    let grafico;
+
+    function formatarValor(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function atualizarLista(transacoes) {
+      lista.innerHTML = '';
+      transacoes.forEach((t, index) => {
+        const li = document.createElement('li');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.index = index;
+        checkbox.id = `transacao-${index}`;
+
+        const label = document.createElement('label');
+        label.htmlFor = `transacao-${index}`;
+        label.innerHTML = `${t.data} - ${t.tipo.toUpperCase()} de ${formatarValor(Number(t.valor))} (${t.descricao})`;
+        if (t.notaFiscalNome) {
+          const link = document.createElement('a');
+          link.href = t.notaFiscalBase64;
+          link.download = t.notaFiscalNome;
+          link.textContent = ' 📎 Ver Nota Fiscal';
+          link.style.marginLeft = '10px';
+          label.appendChild(link);
+        }
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+
+        lista.appendChild(li);
       });
     }
 
-    function calcularSaldoDoMes(ano, mes) {
-      const transacoes = JSON.parse(localStorage.getItem("transacoes")) || [];
+    function atualizarGrafico(transacoes) {
+      const entradas = transacoes.filter(t => t.tipo === 'entrada')
+        .reduce((total, t) => total + Number(t.valor), 0);
+      const saidas = transacoes.filter(t => t.tipo === 'saida')
+        .reduce((total, t) => total + Number(t.valor), 0);
+
+      const ctx = canvas.getContext('2d');
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: [
+            `Entradas (${formatarValor(entradas)})`,
+            `Saídas (${formatarValor(saidas)})`
+          ],
+          datasets: [{
+            data: [entradas, saidas],
+            backgroundColor: ['#4CAF50', '#F44336'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    function carregarDados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      atualizarLista(transacoes);
+      atualizarGrafico(transacoes);
+      saldoMesEl.textContent = '';
+      inputFiltroMes.value = '';
+    }
+
+    function filtrarPorMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert('Selecione um mês válido!');
+        return;
+      }
+
+      saldoMesEl.textContent = '';
+
+      const [ano, mes] = mesSelecionado.split("-");
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      atualizarLista(filtradas);
+      atualizarGrafico(filtradas);
+    }
+
+    function mostrarSaldoMes() {
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert("Selecione um mês primeiro.");
+        return;
+      }
+
+      const [ano, mes] = mesSelecionado.split("-");
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+      const filtradas = transacoes.filter(t => {
+        const [anoT, mesT] = t.data.split('-');
+        return anoT === ano && mesT === mes;
+      });
+
+      const entradas = filtradas.filter(t => t.tipo === 'entrada').reduce((s, t) => s + Number(t.valor), 0);
+      const saidas = filtradas.filter(t => t.tipo === 'saida').reduce((s, t) => s + Number(t.valor), 0);
+      const saldo = entradas - saidas;
+
+      saldoMesEl.textContent = `Saldo do mês: ${formatarValor(saldo)} (${formatarValor(entradas)} - ${formatarValor(saidas)})`;
+    }
+
+    function nomeMesPorExtenso(mes) {
+      const meses = [
+        "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
+        "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"
+      ];
+      return meses[parseInt(mes, 10) - 1];
+    }
+
+    function formatarDataBR(dataISO) {
+      const d = new Date(dataISO);
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    async function gerarPdfDoMes() {
+      const { jsPDF } = window.jspdf;
+      const mesSelecionado = inputFiltroMes.value;
+      if (!mesSelecionado) {
+        alert("Selecione um mês para gerar o PDF.");
+        return;
+      }
+
+      const [ano, mes] = mesSelecionado.split("-");
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
       const filtradas = transacoes.filter(t => {
         const [anoT, mesT] = t.data.split("-");
         return anoT === ano && mesT === mes;
       });
 
-      const entradas = filtradas
-        .filter(t => t.tipo === 'entrada')
-        .reduce((soma, t) => soma + parseFloat(t.valor), 0);
-
-      const saidas = filtradas
-        .filter(t => t.tipo === 'saida')
-        .reduce((soma, t) => soma + parseFloat(t.valor), 0);
-
-      return entradas - saidas;
-    }
-
-    function obterInvestimentos() {
-      const investimentos = JSON.parse(localStorage.getItem("investimentos")) || [];
-      return investimentos.reduce((soma, i) => soma + parseFloat(i.valor), 0);
-    }
-
-    function calcularFaturaDoMes(ano, mes) {
-      const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
-
-      const faturasMes = cartoes
-        .filter(c => c.mesAnoFatura === `${ano}-${mes}`)
-        .reduce((total, c) => total + parseFloat(c.fatura), 0);
-
-      return faturasMes;
-    }
-
-    function carregarExtrato() {
-      const input = document.getElementById("mesAno");
-      const valorSelecionado = input.value;
-
-      if (!valorSelecionado) {
-        alert("Por favor, selecione um mês/ano.");
+      if (filtradas.length === 0) {
+        alert("Não há transações para este mês.");
         return;
       }
 
-      const [ano, mes] = valorSelecionado.split("-");
+      const pdf = new jsPDF();
+      pdf.setFontSize(18);
+      pdf.text(`Relatório de Entradas e Saídas - ${nomeMesPorExtenso(mes)} de ${ano}`, 10, 20);
 
-      const saldo = calcularSaldoDoMes(ano, mes);
-      const investimento = obterInvestimentos();
-      const fatura = calcularFaturaDoMes(ano, mes);
-      const disponivel = saldo + investimento - fatura;
+      pdf.setFontSize(12);
+      let y = 30;
 
-      const classe = disponivel >= 0 ? "positivo" : "negativo";
+      filtradas.forEach(t => {
+        pdf.text(`Data: ${formatarDataBR(t.data)}`, 10, y);
+        pdf.text(`Tipo: ${t.tipo}`, 60, y);
+        pdf.text(`Valor: ${formatarValor(Number(t.valor))}`, 110, y);
+        pdf.text(`Descrição: ${t.descricao}`, 160, y);
+        y += 10;
 
-      document.getElementById("extrato-body").innerHTML = `
-        <tr>
-          <td>${formatarReal(saldo)}</td>
-          <td>${formatarReal(investimento)}</td>
-          <td>${formatarReal(fatura)}</td>
-          <td class="${classe}"><strong>${formatarReal(disponivel)}</strong></td>
-        </tr>
-      `;
+        // Se quiser colocar a nota fiscal (base64), poderia tentar inserir a imagem, mas pdf com muitas imagens pode ficar pesado.
+      });
+
+      pdf.save(`Relatorio_${ano}_${mes}.pdf`);
     }
+
+    function deletarSelecionados() {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      const checkboxes = lista.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert('Selecione ao menos uma transação para deletar.');
+        return;
+      }
+
+      // Remover do array pelas posições
+      const indicesParaRemover = Array.from(checkboxes).map(cb => Number(cb.dataset.index));
+
+      // Filtrar as que não estão selecionadas
+      const novasTransacoes = transacoes.filter((_, i) => !indicesParaRemover.includes(i));
+
+      localStorage.setItem('transacoes', JSON.stringify(novasTransacoes));
+      carregarDados();
+    }
+
+    function deletarTodos() {
+      if (confirm('Deseja realmente deletar todas as transações?')) {
+        localStorage.removeItem('transacoes');
+        carregarDados();
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const dados = new FormData(form);
+      const tipo = dados.get('tipo');
+      const valor = Number(dados.get('valor')).toFixed(2);
+      const descricao = dados.get('descricao');
+      const data = dados.get('data');
+      const notaFiscalArquivo = form.notaFiscal.files[0];
+
+      if (!tipo || !valor || !descricao || !data) {
+        alert('Preencha todos os campos obrigatórios.');
+        return;
+      }
+
+      if (notaFiscalArquivo) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          salvarTransacao({
+            tipo,
+            valor,
+            descricao,
+            data,
+            notaFiscalNome: notaFiscalArquivo.name,
+            notaFiscalBase64: event.target.result
+          });
+        };
+        reader.readAsDataURL(notaFiscalArquivo);
+      } else {
+        salvarTransacao({ tipo, valor, descricao, data });
+      }
+    });
+
+    function salvarTransacao(transacao) {
+      const transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+      transacoes.push(transacao);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      form.reset();
+      carregarDados();
+      alert('Transação salva com sucesso!');
+    }
+
+    // Carregar dados ao iniciar
+    carregarDados();
   </script>
 </body>
 </html>
