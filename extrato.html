@@ -117,10 +117,12 @@
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
       let totalFaturas = 0;
 
+      const faturaFormatada = `${mes}/${ano}`; // Exemplo: "08/2025"
+
       cartoes.forEach(cartao => {
         if (cartao.faturas && Array.isArray(cartao.faturas)) {
           cartao.faturas.forEach(f => {
-            if (f.mesAno === `${ano}-${mes}`) {
+            if (f.mesAno === faturaFormatada) {
               totalFaturas += parseFloat(f.valor);
             }
           });
