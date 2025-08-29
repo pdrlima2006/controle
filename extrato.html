@@ -117,17 +117,13 @@
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
       let totalFaturas = 0;
 
-      // Garante que o mês sempre tenha dois dígitos (ex: "08")
+      // Formato salvo no localStorage: "2025-08"
       const mesCorrigido = mes.padStart(2, '0');
-      const faturaFormatada = `${mesCorrigido}/${ano}`; // Exemplo: "08/2025"
+      const faturaFormatada = `${ano}-${mesCorrigido}`;
 
       cartoes.forEach(cartao => {
-        if (cartao.faturas && Array.isArray(cartao.faturas)) {
-          cartao.faturas.forEach(f => {
-            if (f.mesAno && f.mesAno.trim() === faturaFormatada) {
-              totalFaturas += parseFloat(f.valor);
-            }
-          });
+        if (cartao.mesAnoFatura && cartao.mesAnoFatura === faturaFormatada) {
+          totalFaturas += parseFloat(cartao.fatura || 0);
         }
       });
 
