@@ -117,13 +117,19 @@
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
       let totalFaturas = 0;
 
-      // Formato salvo no localStorage: "2025-08"
       const mesCorrigido = mes.padStart(2, '0');
       const faturaFormatada = `${ano}-${mesCorrigido}`;
 
+      console.log("📅 Mês buscado:", faturaFormatada);
+
       cartoes.forEach(cartao => {
-        if (cartao.mesAnoFatura && cartao.mesAnoFatura === faturaFormatada) {
-          totalFaturas += parseFloat(cartao.fatura || 0);
+        if (
+          cartao.mesAnoFatura &&
+          cartao.mesAnoFatura === faturaFormatada &&
+          !isNaN(parseFloat(cartao.fatura))
+        ) {
+          console.log(`💳 ${cartao.banco} | Fatura: R$ ${cartao.fatura}`);
+          totalFaturas += parseFloat(cartao.fatura);
         }
       });
 
