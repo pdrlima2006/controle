@@ -113,28 +113,21 @@
         .reduce((total, i) => total + parseFloat(i.valor), 0);
     }
 
-    // Função que retorna fatura correta: 
-    // se só 1 cartão, retorna o valor dessa fatura;
-    // se mais de 1, retorna soma das faturas;
-    // se nenhum, retorna 0.
     function calcularFaturasMes(ano, mes) {
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
-      const mesCorrigido = mes.padStart(2, '0');
-      const faturaFormatada = `${ano}-${mesCorrigido}`;
+      const mesFormatado = mes.padStart(2, '0');
+      const faturaAlvo = `${ano}-${mesFormatado}`;
 
-      // Filtra os cartões que tem fatura para o mês/ano
-      const cartoesComFatura = cartoes.filter(cartao => {
-        return cartao.mesAnoFatura === faturaFormatada && !isNaN(parseFloat(cartao.fatura));
-      });
+      // Filtrar cartões com fatura válida e do mês solicitado
+      const cartoesDoMes = cartoes.filter(c => 
+        c.mesAnoFatura === faturaAlvo && !isNaN(parseFloat(c.fatura))
+      );
 
-      if (cartoesComFatura.length === 0) {
-        return 0;
-      } else if (cartoesComFatura.length === 1) {
-        return parseFloat(cartoesComFatura[0].fatura);
-      } else {
-        // Soma as faturas
-        return cartoesComFatura.reduce((total, cartao) => total + parseFloat(cartao.fatura), 0);
+      if (cartoesDoMes.length === 1) {
+        return parseFloat(cartoesDoMes[0].fatura);
       }
+
+      return cartoesDoMes.reduce((total, c) => total + parseFloat(c.fatura), 0);
     }
 
     function carregarExtrato() {
