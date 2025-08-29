@@ -142,7 +142,7 @@
       const saldo = calcularSaldoMes(ano, mes);
       const investimento = calcularInvestimentosMes(ano, mes);
       const fatura = calcularFaturasMes(ano, mes);
-      const disponivel = saldo + investimento - fatura;
+      const disponivel = saldo - investimento - fatura;
       const classe = disponivel >= 0 ? "positivo" : "negativo";
 
       document.getElementById("extrato-body").innerHTML = `
