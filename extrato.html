@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Extrato Geral</title>
   <style>
-    /* Seu CSS permanece o mesmo */
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
@@ -114,25 +113,28 @@
         .reduce((total, i) => total + parseFloat(i.valor), 0);
     }
 
-    // Agora, retorna a soma total da fatura, mas também o primeiro cartão encontrado no mês.
+    // Função que retorna fatura correta: 
+    // se só 1 cartão, retorna o valor dessa fatura;
+    // se mais de 1, retorna soma das faturas;
+    // se nenhum, retorna 0.
     function calcularFaturasMes(ano, mes) {
       const cartoes = JSON.parse(localStorage.getItem("cartoes")) || [];
       const mesCorrigido = mes.padStart(2, '0');
       const faturaFormatada = `${ano}-${mesCorrigido}`;
 
-      let totalFaturas = 0;
-      let primeiroCartao = null;
+      // Filtra os cartões que tem fatura para o mês/ano
+      const cartoesComFatura = cartoes.filter(cartao => {
+        return cartao.mesAnoFatura === faturaFormatada && !isNaN(parseFloat(cartao.fatura));
+      });
 
-      for (let cartao of cartoes) {
-        if (cartao.mesAnoFatura === faturaFormatada && !isNaN(parseFloat(cartao.fatura))) {
-          totalFaturas += parseFloat(cartao.fatura);
-          if (!primeiroCartao) {
-            primeiroCartao = cartao;
-          }
-        }
+      if (cartoesComFatura.length === 0) {
+        return 0;
+      } else if (cartoesComFatura.length === 1) {
+        return parseFloat(cartoesComFatura[0].fatura);
+      } else {
+        // Soma as faturas
+        return cartoesComFatura.reduce((total, cartao) => total + parseFloat(cartao.fatura), 0);
       }
-
-      return { totalFaturas, primeiroCartao };
     }
 
     function carregarExtrato() {
@@ -146,29 +148,18 @@
 
       const saldo = calcularSaldoMes(ano, mes);
       const investimento = calcularInvestimentosMes(ano, mes);
-      const { totalFaturas, primeiroCartao } = calcularFaturasMes(ano, mes);
-      const disponivel = saldo + investimento - totalFaturas;
+      const fatura = calcularFaturasMes(ano, mes);
+      const disponivel = saldo + investimento - fatura;
       const classe = disponivel >= 0 ? "positivo" : "negativo";
-
-      let faturaExibida = totalFaturas;
-      if (primeiroCartao) {
-        // Exibe só a fatura do primeiro cartão encontrado
-        faturaExibida = parseFloat(primeiroCartao.fatura);
-      }
 
       document.getElementById("extrato-body").innerHTML = `
         <tr>
           <td>${formatarReal(saldo)}</td>
           <td>${formatarReal(investimento)}</td>
-          <td>${formatarReal(faturaExibida)}</td>
+          <td>${formatarReal(fatura)}</td>
           <td class="${classe}"><strong>${formatarReal(disponivel)}</strong></td>
         </tr>
       `;
-
-      // Opcional: Mostrar qual cartão está exibindo a fatura
-      if (primeiroCartao) {
-        alert(`Mostrando a fatura do cartão: ${primeiroCartao.banco} (${primeiroCartao.nome || primeiroCartao.numeroCartao || ''})`);
-      }
     }
   </script>
 
