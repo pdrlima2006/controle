@@ -172,23 +172,6 @@
           <input type="text" id="despesas" name="despesas" placeholder="R$ 0,00" required />
         </div>
       </div>
-
-      <!-- Campos adicionais para investimentos -->
-      <div class="linha-campos" style="margin-top: 20px;">
-        <div class="campo">
-          <label for="valorInvestimento">Valor do Investimento:</label>
-          <input type="text" id="valorInvestimento" name="valorInvestimento" placeholder="R$ 0,00" />
-        </div>
-        <div class="campo">
-          <label for="rentabilidade">Rentabilidade (%):</label>
-          <input type="number" id="rentabilidade" name="rentabilidade" min="0" step="0.01" placeholder="Ex: 5.5" />
-        </div>
-        <div class="campo">
-          <label for="vencimento">Vencimento:</label>
-          <input type="month" id="vencimento" name="vencimento" />
-        </div>
-      </div>
-
       <button type="submit">Salvar</button>
     </form>
 
@@ -219,9 +202,6 @@
             <th>Receitas</th>
             <th>Despesas</th>
             <th>Saldo</th>
-            <th>Valor Investimento</th>
-            <th>Rentabilidade (%)</th>
-            <th>Vencimento</th>
           </tr>
         </thead>
         <tbody id="tabelaHistorico"></tbody>
@@ -240,10 +220,6 @@
   <script>
     const receitasInput = document.getElementById("receitas");
     const despesasInput = document.getElementById("despesas");
-    const valorInvestimentoInput = document.getElementById("valorInvestimento");
-    const rentabilidadeInput = document.getElementById("rentabilidade");
-    const vencimentoInput = document.getElementById("vencimento");
-
     const form = document.getElementById("planejamentoForm");
     const filtroMesInput = document.getElementById("filtroMes");
     const graficoContainer = document.getElementById("graficoContainer");
@@ -266,7 +242,7 @@
       input.value = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    [receitasInput, despesasInput, valorInvestimentoInput].forEach(input => {
+    [receitasInput, despesasInput].forEach(input => {
       input.addEventListener('input', formatarMoeda);
       input.addEventListener('blur', () => {
         if (!input.value) input.value = '';
@@ -284,12 +260,9 @@
       const mes = form.elements['mes'].value;
       const receitas = moedaParaNumero(receitasInput.value);
       const despesas = moedaParaNumero(despesasInput.value);
-      const valorInvestimento = moedaParaNumero(valorInvestimentoInput.value);
-      const rentabilidade = parseFloat(rentabilidadeInput.value) || 0;
-      const vencimento = vencimentoInput.value || null;
 
       if (!mes || isNaN(receitas) || isNaN(despesas)) {
-        alert('Preencha todos os campos obrigatórios corretamente.');
+        alert('Preencha todos os campos corretamente.');
         return;
       }
 
@@ -301,10 +274,10 @@
           return;
         } else {
           const index = historico.findIndex(item => item.mes === mes);
-          historico[index] = { mes, receitas, despesas, valorInvestimento, rentabilidade, vencimento };
+          historico[index] = { mes, receitas, despesas };
         }
       } else {
-        historico.push({ mes, receitas, despesas, valorInvestimento, rentabilidade, vencimento });
+        historico.push({ mes, receitas, despesas });
       }
 
       localStorage.setItem('planejamentos', JSON.stringify(historico));
@@ -321,122 +294,133 @@
       const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
       tabelaHistorico.innerHTML = '';
 
-      historico.forEach(({ mes, receitas, despesas, valorInvestimento, rentabilidade, vencimento }) => {
+      historico.forEach(({ mes, receitas, despesas }, index) => {
+        const [ano, mesNum] = mes.split('-');
+        // CORREÇÃO: usar new Date(ano, mesNum - 1, 1)
+        const nomeMes = new Date(ano, mesNum - 1, 1).toLocaleString('pt-BR', { month: 'long' });
         const saldo = receitas - despesas;
-        const tr = document.createElement('tr');
 
+        const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><input type="checkbox" data-mes="${mes}"></td>
-          <td>${mes.replace('-', '/')}</td>
+          <td><input type="checkbox" class="chkSelecionado" data-index="${index}" /></td>
+          <td>${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}/${ano}</td>
           <td>${receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           <td>${despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           <td style="color:${saldo >= 0 ? 'green' : 'red'}">${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td>${valorInvestimento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td>${rentabilidade.toFixed(2)}%</td>
-          <td>${vencimento ? vencimento.replace('-', '/') : '-'}</td>
         `;
-
         tabelaHistorico.appendChild(tr);
       });
     }
 
-    function toggleSelecionarTodos(checkbox) {
-      const checkboxes = tabelaHistorico.querySelectorAll('input[type="checkbox"]');
-      checkboxes.forEach(cb => cb.checked = checkbox.checked);
-    }
+    function mostrarGrafico(mes, receitas, despesas) {
+      graficoContainer.style.display = 'block';
+      const [ano, mesNum] = mes.split('-');
+      // CORREÇÃO: usar new Date(ano, mesNum - 1, 1)
+      const nomeMes = new Date(ano, mesNum - 1, 1).toLocaleString('pt-BR', { month: 'long' });
+      tituloMes.textContent = `Gráfico de ${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}/${ano}`;
 
-    function deletarSelecionados() {
-      const checkboxes = tabelaHistorico.querySelectorAll('input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) {
-        alert('Selecione ao menos um planejamento para deletar.');
-        return;
-      }
+      if (grafico) grafico.destroy();
 
-      if (!confirm(`Deseja realmente deletar ${checkboxes.length} planejamento(s)?`)) return;
-
-      let historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-
-      checkboxes.forEach(cb => {
-        const mes = cb.getAttribute('data-mes');
-        historico = historico.filter(item => item.mes !== mes);
+      grafico = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Receitas', 'Despesas'],
+          datasets: [{
+            data: [receitas, despesas],
+            backgroundColor: ['#4CAF50', '#F44336'],
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  let val = context.parsed;
+                  if(label) label += ': ';
+                  label += val.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+                  return label;
+                }
+              }
+            }
+          },
+        },
       });
 
-      localStorage.setItem('planejamentos', JSON.stringify(historico));
-      atualizarHistorico();
-      graficoContainer.style.display = 'none';
-      resultadoSaldo.textContent = '';
-      detalhesSaldo.textContent = '';
-      document.getElementById('selecionarTodos').checked = false;
+      mostrarSaldoDetalhado(receitas, despesas);
     }
 
-    function deletarTodos() {
-      if (!confirm('Deseja realmente deletar todos os planejamentos?')) return;
-      localStorage.removeItem('planejamentos');
-      atualizarHistorico();
-      graficoContainer.style.display = 'none';
-      resultadoSaldo.textContent = '';
-      detalhesSaldo.textContent = '';
-      document.getElementById('selecionarTodos').checked = false;
+    function mostrarSaldoDetalhado(receitas, despesas) {
+      const saldo = receitas - despesas;
+      resultadoSaldo.textContent = `Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+      resultadoSaldo.style.color = saldo >= 0 ? 'green' : 'red';
+
+      detalhesSaldo.textContent = `${receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} - ${despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} = ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
     }
 
     function filtrarPorMes() {
       const mesSelecionado = filtroMesInput.value;
       if (!mesSelecionado) {
-        alert('Selecione um mês para filtrar.');
+        alert('Selecione um mês válido!');
         return;
       }
 
       const historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
-      const planejamento = historico.find(item => item.mes === mesSelecionado);
 
-      if (!planejamento) {
-        alert('Nenhum planejamento encontrado para o mês selecionado.');
+      const mesFiltroFormatado = mesSelecionado.trim();
+
+      const filtrado = historico.find(item => item.mes.trim() === mesFiltroFormatado);
+
+      if (!filtrado) {
+        alert('Nenhum planejamento encontrado para esse mês.');
         graficoContainer.style.display = 'none';
         resultadoSaldo.textContent = '';
         detalhesSaldo.textContent = '';
         return;
       }
 
-      const { receitas, despesas, valorInvestimento, rentabilidade, vencimento } = planejamento;
-      const saldo = receitas - despesas;
-
-      tituloMes.textContent = `Gráfico de Planejamento para ${mesSelecionado.replace('-', '/')}`;
-
-      if (grafico) {
-        grafico.destroy();
-      }
-
-      grafico = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["Receitas", "Despesas"],
-          datasets: [{
-            data: [receitas, despesas],
-            backgroundColor: ["#3a86ff", "#ff006e"],
-            borderWidth: 1,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      });
-
-      graficoContainer.style.display = "block";
-
-      resultadoSaldo.textContent = `Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-      resultadoSaldo.style.color = saldo >= 0 ? "green" : "red";
-
-      detalhesSaldo.textContent = `Investimento: ${valorInvestimento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | Rentabilidade: ${rentabilidade.toFixed(2)}% | Vencimento: ${vencimento ? vencimento.replace('-', '/') : '-'}`;
+      atualizarHistorico();
+      mostrarGrafico(filtrado.mes, filtrado.receitas, filtrado.despesas);
     }
 
-    // Inicializa a tabela ao carregar a página
-    atualizarHistorico();
+    function deletarSelecionados() {
+      const checkboxes = document.querySelectorAll('.chkSelecionado:checked');
+      if (checkboxes.length === 0) {
+        alert('Selecione pelo menos um planejamento para deletar.');
+        return;
+      }
+      let historico = JSON.parse(localStorage.getItem('planejamentos')) || [];
+      const indicesParaDeletar = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+      historico = historico.filter((_, i) => !indicesParaDeletar.includes(i));
+      localStorage.setItem('planejamentos', JSON.stringify(historico));
+      atualizarHistorico();
+      if(historico.length === 0){
+        graficoContainer.style.display = 'none';
+        resultadoSaldo.textContent = '';
+        detalhesSaldo.textContent = '';
+      }
+    }
 
+    function deletarTodos() {
+      if (confirm('Tem certeza que deseja deletar todos os planejamentos?')) {
+        localStorage.removeItem('planejamentos');
+        atualizarHistorico();
+        graficoContainer.style.display = 'none';
+        resultadoSaldo.textContent = '';
+        detalhesSaldo.textContent = '';
+      }
+    }
+
+    function toggleSelecionarTodos(checkbox) {
+      const checkboxes = document.querySelectorAll('.chkSelecionado');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      atualizarHistorico();
+    });
   </script>
 </body>
-</html>
+</html>o meu ta assim
