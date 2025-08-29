@@ -120,16 +120,27 @@
       const mesCorrigido = mes.padStart(2, '0');
       const faturaFormatada = `${ano}-${mesCorrigido}`;
 
-      console.log("📅 Mês buscado:", faturaFormatada);
-
       cartoes.forEach(cartao => {
+        // Novo formato (cartao.mesAnoFatura + cartao.fatura)
         if (
-          cartao.mesAnoFatura &&
           cartao.mesAnoFatura === faturaFormatada &&
+          cartao.fatura !== undefined &&
           !isNaN(parseFloat(cartao.fatura))
         ) {
-          console.log(`💳 ${cartao.banco} | Fatura: R$ ${cartao.fatura}`);
           totalFaturas += parseFloat(cartao.fatura);
+        }
+
+        // Formato antigo (cartao.faturas array)
+        if (Array.isArray(cartao.faturas)) {
+          cartao.faturas.forEach(f => {
+            if (
+              f.mesAno === faturaFormatada &&
+              f.valor !== undefined &&
+              !isNaN(parseFloat(f.valor))
+            ) {
+              totalFaturas += parseFloat(f.valor);
+            }
+          });
         }
       });
 
