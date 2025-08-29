@@ -92,7 +92,7 @@
 
     function calcularSaldoMes(ano, mes) {
       const transacoes = JSON.parse(localStorage.getItem("transacoes")) || [];
-      return transacoes
+      const saldo = transacoes
         .filter(t => {
           const [a, m] = t.data.split("-");
           return a === ano && m === mes;
@@ -100,17 +100,21 @@
         .reduce((total, t) => {
           return total + (t.tipo === "entrada" ? parseFloat(t.valor) : -parseFloat(t.valor));
         }, 0);
+      console.log(`Saldo para ${ano}-${mes}: ${saldo}`);
+      return saldo;
     }
 
     function calcularInvestimentosMes(ano, mes) {
       const investimentos = JSON.parse(localStorage.getItem("investimentos")) || [];
-      return investimentos
+      const investimento = investimentos
         .filter(i => {
           if (!i.data) return false;
           const [a, m] = i.data.split("-");
           return a === ano && m === mes;
         })
         .reduce((total, i) => total + parseFloat(i.valor), 0);
+      console.log(`Investimentos para ${ano}-${mes}: ${investimento}`);
+      return investimento;
     }
 
     function calcularFaturasMes(ano, mes) {
@@ -120,30 +124,21 @@
       const mesCorrigido = mes.padStart(2, '0');
       const faturaFormatada = `${ano}-${mesCorrigido}`;
 
+      console.log(`Buscando faturas para: ${faturaFormatada}`);
+      console.log("Conteúdo de cartões:", cartoes);
+
       cartoes.forEach(cartao => {
-        // Novo formato (cartao.mesAnoFatura + cartao.fatura)
         if (
+          cartao.mesAnoFatura &&
           cartao.mesAnoFatura === faturaFormatada &&
-          cartao.fatura !== undefined &&
           !isNaN(parseFloat(cartao.fatura))
         ) {
+          console.log(`> Achou (cartao.fatura): ${cartao.banco} – ${cartao.fatura}`);
           totalFaturas += parseFloat(cartao.fatura);
-        }
-
-        // Formato antigo (cartao.faturas array)
-        if (Array.isArray(cartao.faturas)) {
-          cartao.faturas.forEach(f => {
-            if (
-              f.mesAno === faturaFormatada &&
-              f.valor !== undefined &&
-              !isNaN(parseFloat(f.valor))
-            ) {
-              totalFaturas += parseFloat(f.valor);
-            }
-          });
         }
       });
 
+      console.log(`Total faturas calculado: ${totalFaturas}`);
       return totalFaturas;
     }
 
@@ -159,6 +154,10 @@
       const saldo = calcularSaldoMes(ano, mes);
       const investimento = calcularInvestimentosMes(ano, mes);
       const fatura = calcularFaturasMes(ano, mes);
+
+      console.log("Valores finais calculados:");
+      console.log({ saldo, investimento, fatura });
+
       const disponivel = saldo + investimento - fatura;
       const classe = disponivel >= 0 ? "positivo" : "negativo";
 
