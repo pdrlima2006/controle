@@ -37,7 +37,7 @@
       display: flex;
       flex-direction: column;
       flex: 1;
-      min-width: 200px;
+      min-width: 150px;
     }
 
     .form-group label {
@@ -45,7 +45,8 @@
       margin-bottom: 5px;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -127,17 +128,35 @@
 
       <div class="form-group">
         <label for="tipo">Tipo de Investimento:</label>
-        <input type="text" name="tipo" id="tipo" required />
+        <select name="tipo" id="tipo" required>
+          <option value="">Selecione...</option>
+          <option value="Renda Fixa">Renda Fixa</option>
+          <option value="Renda Variável">Renda Variável</option>
+          <option value="Fundo Imobiliário">Fundo Imobiliário</option>
+          <option value="Criptomoeda">Criptomoeda</option>
+          <option value="Poupança">Poupança</option>
+          <option value="Outros">Outros</option>
+        </select>
       </div>
 
       <div class="form-group">
-        <label for="valor">Valor:</label>
-        <input type="text" name="valor" id="valor" required />
+        <label for="valor">Valor (R$):</label>
+        <input type="number" step="0.01" min="0" name="valor" id="valor" required />
       </div>
 
       <div class="form-group">
-        <label for="data">Data:</label>
+        <label for="data">Data da aplicação:</label>
         <input type="date" name="data" id="data" required />
+      </div>
+
+      <div class="form-group">
+        <label for="prazo">Prazo (meses):</label>
+        <input type="number" min="0" name="prazo" id="prazo" />
+      </div>
+
+      <div class="form-group">
+        <label for="rentabilidade">Rentabilidade (% a.a.):</label>
+        <input type="number" step="0.01" min="0" name="rentabilidade" id="rentabilidade" />
       </div>
 
       <button type="submit">Salvar</button>
@@ -149,8 +168,10 @@
           <th></th>
           <th>Instituição</th>
           <th>Tipo</th>
-          <th>Valor</th>
+          <th>Valor (R$)</th>
           <th>Data</th>
+          <th>Prazo (meses)</th>
+          <th>Rentabilidade (% a.a.)</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -163,34 +184,27 @@
 
   <script>
     const form = document.getElementById('form-investimento');
-    const valorInput = document.getElementById('valor');
     const tabelaBody = document.querySelector('#tabela-investimentos tbody');
     const btnDeletar = document.getElementById('btn-deletar');
 
-    // Formatar como moeda brasileira
-    function formatarMoeda(input) {
-      let valor = input.value.replace(/\D/g, "");
-      valor = (parseInt(valor) / 100).toFixed(2);
-      input.value = parseFloat(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      });
-    }
-
-    valorInput.addEventListener("input", () => formatarMoeda(valorInput));
-
     let investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
 
+    function formatarMoedaBR(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
     function atualizarTabela() {
-      tabelaBody.innerHTML = "";
+      tabelaBody.innerHTML = '';
       investimentos.forEach((invest, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="checkbox" data-index="${index}"></td>
           <td>${invest.banco}</td>
           <td>${invest.tipo}</td>
-          <td>R$ ${invest.valor.toFixed(2).replace(".", ",")}</td>
+          <td>${formatarMoedaBR(invest.valor)}</td>
           <td>${invest.data || '-'}</td>
+          <td>${invest.prazo !== undefined ? invest.prazo : '-'}</td>
+          <td>${invest.rentabilidade !== undefined ? invest.rentabilidade : '-'}</td>
         `;
         tabelaBody.appendChild(tr);
       });
@@ -202,16 +216,23 @@
       e.preventDefault();
 
       const banco = form.elements['banco'].value.trim();
-      const tipo = form.elements['tipo'].value.trim();
+      const tipo = form.elements['tipo'].value;
+      const valor = parseFloat(form.elements['valor'].value);
       const data = form.elements['data'].value;
+      const prazo = form.elements['prazo'].value ? parseInt(form.elements['prazo'].value) : null;
+      const rentabilidade = form.elements['rentabilidade'].value ? parseFloat(form.elements['rentabilidade'].value) : null;
 
-      const valorStr = form.elements['valor'].value.replace(/\D/g, "");
-      const valor = parseFloat(valorStr) / 100;
+      if (!banco || !tipo || isNaN(valor) || !data) {
+        alert('Preencha todos os campos obrigatórios corretamente.');
+        return;
+      }
 
-      if (!banco || !tipo || isNaN(valor) || !data) return;
+      const novoInvestimento = { banco, tipo, valor, data };
 
-      const novo = { banco, tipo, valor, data };
-      investimentos.push(novo);
+      if (prazo !== null) novoInvestimento.prazo = prazo;
+      if (rentabilidade !== null) novoInvestimento.rentabilidade = rentabilidade;
+
+      investimentos.push(novoInvestimento);
       localStorage.setItem('investimentos', JSON.stringify(investimentos));
 
       form.reset();
@@ -219,19 +240,16 @@
     });
 
     btnDeletar.addEventListener('click', () => {
-      const checkboxesMarcados = document.querySelectorAll('#tabela-investimentos tbody input[type="checkbox"]:checked');
-      if (checkboxesMarcados.length === 0) {
-        alert("Selecione pelo menos um investimento para excluir.");
+      const checkboxes = document.querySelectorAll('#tabela-investimentos tbody input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert('Selecione ao menos um investimento para deletar.');
         return;
       }
+      if (!confirm('Tem certeza que deseja excluir o(s) investimento(s) selecionado(s)?')) return;
 
-      if (!confirm("Tem certeza que deseja excluir o(s) investimento(s) selecionado(s)?")) {
-        return;
-      }
+      const indicesParaRemover = Array.from(checkboxes).map(cb => Number(cb.dataset.index));
 
-      const indicesParaRemover = Array.from(checkboxesMarcados).map(cb => parseInt(cb.dataset.index));
-
-      investimentos = investimentos.filter((_, index) => !indicesParaRemover.includes(index));
+      investimentos = investimentos.filter((_, idx) => !indicesParaRemover.includes(idx));
       localStorage.setItem('investimentos', JSON.stringify(investimentos));
       atualizarTabela();
     });
