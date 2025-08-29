@@ -3,18 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <title>Cadastro - Controle Financeiro</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    form {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      text-align: center;
+      color: #003366;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #002244;
+    }
+
+    #mensagem {
+      color: red;
+      text-align: center;
+    }
+
+    .link-buttons {
+      margin-top: 15px;
+    }
+
+    .link-buttons button {
+      background-color: transparent;
+      color: #003366;
+      border: 2px solid #003366;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .link-buttons button:hover {
+      background-color: #003366;
+      color: white;
+    }
+
+    @media (max-width: 480px) {
+      form {
+        padding: 20px;
+      }
+
+      input, button {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
+
   <form id="registerForm">
     <h1>Cadastro</h1>
     <input type="text" id="username" placeholder="Usuário" required />
     <input type="password" id="password" placeholder="Senha" required />
     <button type="submit">Cadastrar</button>
-    <div id="mensagem" style="color:red; margin-top:10px;"></div>
+    <div id="mensagem"></div>
   </form>
 
-  <div class="link-buttons" style="margin-top: 10px;">
+  <div class="link-buttons">
     <button onclick="window.location.href='index.html'">Voltar para login</button>
   </div>
 
@@ -33,27 +127,23 @@
         return;
       }
 
-      // Pega usuários cadastrados
       const users = JSON.parse(localStorage.getItem('users')) || [];
 
-      // Verifica se usuário já existe
       if (users.find(u => u.username === username)) {
         mensagem.innerText = "Usuário já cadastrado!";
         return;
       }
 
-      // Adiciona novo usuário
       users.push({ username, password });
       localStorage.setItem('users', JSON.stringify(users));
 
-      // Cria token fake e salva usuário logado
       localStorage.setItem('token', 'fake-token');
       localStorage.setItem('username', username);
 
-      // Feedback e redirecionamento
       alert("Cadastro realizado com sucesso!");
       window.location.href = "index.html";
     });
   </script>
+
 </body>
 </html>
